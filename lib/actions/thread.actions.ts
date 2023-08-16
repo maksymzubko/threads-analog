@@ -29,8 +29,6 @@ export async function createThread({text, author, communityId, path}: CreateThre
             { _id: 1 }
         );
 
-        console.log(communityId)
-
         const createdThread = await Thread.create({text, author, community: communityIdObject});
 
         await User.findByIdAndUpdate(author, {$push: {threads: createdThread._id}});
