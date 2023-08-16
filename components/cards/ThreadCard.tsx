@@ -3,15 +3,9 @@ import Image from "next/image";
 import {formatDateForPost, formatDateString} from "@/lib/utils";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import React from "react";
-import {FacebookIcon, FacebookShareButton} from "next-share";
 import Share from "@/components/cards/Share";
+import EditCardForm from "@/components/forms/EditCardForm";
 import {usePathname} from "next/navigation";
-import {
-    DropdownMenu,
-    DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal,
-    DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 
 interface Params {
     id: string,
@@ -48,7 +42,7 @@ const ThreadCard = ({
     return (
         <>
             <article id={`${id}`}
-                className={`flex w-full flex-col ${isComment ? `px-0 xs:px-7 ${!child?.author && 'border-b-[1px] border-dark-3'}` : 'bg-dark-2 p-7 rounded-xl'}`}>
+                     className={`flex w-full flex-col ${isComment ? `px-0 xs:px-7 ${!child?.author && 'border-b-[1px] border-dark-3'}` : 'bg-dark-2 p-7 rounded-xl'}`}>
                 <div
                     className={`${isComment && !isChild && 'mt-5'} ${isComment && (child ? 'mb-2' : 'mb-5')} flex items-start justify-between relative`}>
                     <div className={"flex w-full flex-1 flex-row gap-4"}>
@@ -60,23 +54,9 @@ const ThreadCard = ({
 
                             {(comments.length > 0 || isMain) && <div className={"thread-card_bar"}/>}
 
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <div className={"absolute flex flex-col gap-0.5 top-0 right-0 cursor-pointer transition ease-in-out [&>*]:hover:bg-gray-200"}>
-                                        <span className={"block w-1.5 h-1.5 bg-gray-400 rounded-full"}></span>
-                                        <span className={"block w-1.5 h-1.5 bg-gray-400 rounded-full"}></span>
-                                        <span className={"block w-1.5 h-1.5 bg-gray-400 rounded-full"}></span>
-                                    </div>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56">
-                                    <DropdownMenuItem className={"cursor-pointer"}>
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className={"cursor-pointer"}>
-                                         Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            {currentUserId === author.id &&
+                                <EditCardForm id={id}/>
+                            }
                         </div>
                         <div className={`flex w-full flex-col`}>
                             <Link href={`/profile/@${author.username}`}
@@ -108,7 +88,8 @@ const ThreadCard = ({
                                     </div>
                                     <Link href={`/thread/${id}`}
                                           className={'flex items-center text-gray-1 text-base-regular'}>
-                                        <div className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
+                                        <div
+                                            className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
                                             <Image src={"/assets/reply.svg"} alt={"reply"} width={24} height={24}
                                                    className={"cursor-pointer object-contain"}/>
                                         </div>
@@ -161,7 +142,8 @@ const ThreadCard = ({
                     <p className='text-subtle-medium text-gray-1 mt-5 flex items-center'>
                         {formatDateString(createdAt)}
                         {community && ` - ${community?.name} Community`}
-                        {community && <Image src={community.image} alt={community.name} width={14} height={14} className={"ml-1 h-[14px] hidden md:block rounded-full object-cover"}/> }
+                        {community && <Image src={community.image} alt={community.name} width={14} height={14}
+                                             className={"ml-1 h-[14px] hidden md:block rounded-full object-cover"}/>}
                     </p>
                 )}
             </article>
