@@ -6,5 +6,5 @@ export const ThreadValidation = zod.object({
 })
 
 export const CommentValidation = zod.object({
-    thread: zod.string().nonempty().min(3),
+    thread: zod.string().nonempty().min(1),
 })

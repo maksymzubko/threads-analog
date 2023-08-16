@@ -5,6 +5,7 @@ import User from "@/lib/models/user.model";
 import {revalidatePath} from "next/cache";
 import Thread from "@/lib/models/thread.model";
 import {FilterQuery, SortOrder} from "mongoose";
+import Community from "@/lib/models/community.model";
 
 interface UpdateUserParams {
     userId: string,
@@ -66,10 +67,13 @@ export async function fetchUserPosts(userId: string) {
             .populate({
                 path: 'threads',
                 model: Thread,
-                populate: {
+                populate: [{
+                    path: "community",
+                    model: Community,
+                }, {
                     path: 'children', model: Thread,
                     populate: {path: 'author', model: User, select: 'name username image id'}
-                }
+                }]
             })
     } catch (error: any) {
         throw new Error(`Failed to fetch posts: ${error.message}`)
