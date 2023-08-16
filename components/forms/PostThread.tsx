@@ -54,8 +54,8 @@ function PostThread({userId}:{userId: string}) {
                         </FormItem>
                     )}
                 />
-                <Button type={"submit"} className={'bg-primary-500'}>
-                    Post thread
+                <Button type={"submit"} disabled={!form.formState.isValid || form.formState.isSubmitting || form.formState.isSubmitSuccessful} className={'bg-primary-500'}>
+                    {form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Posting...' : 'Post thread'}
                 </Button>
             </form>
         </Form>
