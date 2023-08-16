@@ -9,29 +9,40 @@ import {Button} from "@/components/ui/button";
 import {Textarea} from "@/components/ui/textarea";
 import * as zod from 'zod';
 import {usePathname, useRouter} from "next/navigation";
-import {createThread} from "@/lib/actions/thread.actions";
+import {createThread, updateThread} from "@/lib/actions/thread.actions";
 import {useOrganization} from "@clerk/nextjs";
 
-function PostThread({userId}:{userId: string}) {
+function PostThread({userId, threadId, text}: { userId: string, threadId?: string; text?: string; }) {
     const router = useRouter();
     const pathname = usePathname();
 
-    const { organization } = useOrganization();
-
+    const {organization} = useOrganization();
     const form = useForm(
         {
             resolver: zodResolver(ThreadValidation),
             defaultValues: {
-                thread: '',
+                thread: text ? text : '',
                 accountId: userId
             }
         });
 
     const onSubmit = async (values: zod.infer<typeof ThreadValidation>) => {
-        await createThread({text: values.thread, author: values.accountId, path: pathname, communityId: organization ? organization.id : null});
-
-        router.push('/');
-    }
+        if (threadId) {
+            await updateThread({
+                text: values.thread,
+                path: pathname,
+                id: threadId
+            });
+            router.back();
+        } else {
+            await createThread({
+                text: values.thread,
+                author: values.accountId,
+                path: pathname,
+                communityId: organization ? organization.id : null
+            });
+            router.push('/');
+        }}
 
     return (
         <Form {...form}>
@@ -44,7 +55,8 @@ function PostThread({userId}:{userId: string}) {
                             <FormLabel className={"text-base-semibold text-light-2"}>
                                 Content
                             </FormLabel>
-                            <FormControl className={'no-focus border border-dark-4 bg-dark-3 text-light-1'}>
+                            <FormControl
+                                className={'no-focus border border-dark-4 bg-dark-3 text-light-1 max-h-[400px] min-h-[250px]'}>
                                 <Textarea
                                     rows={15}
                                     {...field}
@@ -54,8 +66,10 @@ function PostThread({userId}:{userId: string}) {
                         </FormItem>
                     )}
                 />
-                <Button type={"submit"} className={'bg-primary-500'}>
-                    Post thread
+                <Button type={"submit"}
+                        disabled={!form.formState.isValid || form.formState.isSubmitting || form.formState.isSubmitSuccessful}
+                        className={'bg-primary-500'}>
+                    {form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Posting...' : 'Post thread'}
                 </Button>
             </form>
         </Form>

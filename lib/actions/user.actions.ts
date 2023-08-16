@@ -5,6 +5,8 @@ import User from "@/lib/models/user.model";
 import {revalidatePath} from "next/cache";
 import Thread from "@/lib/models/thread.model";
 import {FilterQuery, SortOrder} from "mongoose";
+import Community from "@/lib/models/community.model";
+import {$and} from "sift";
 
 interface UpdateUserParams {
     userId: string,
@@ -23,10 +25,14 @@ interface GetUsersParams {
     searchString?: string;
 }
 
-export async function updateUser({userId, username, name, bio, image, path}: UpdateUserParams): Promise<void> {
+export async function updateUser({userId, username, name, bio, image, path}: UpdateUserParams): Promise<any> {
     connectToDB();
 
     try {
+        const existedUser = await User.findOne({username: username.toLowerCase(), id: {$ne: userId}});
+        if(existedUser)
+            return {error: {name: 'username', error: {type: 'custom', message:'User with same name is already exist!'}}}
+
         await User.findOneAndUpdate(
             {id: userId},
             {
@@ -66,10 +72,13 @@ export async function fetchUserPosts(userId: string) {
             .populate({
                 path: 'threads',
                 model: Thread,
-                populate: {
+                populate: [{
+                    path: "community",
+                    model: Community,
+                }, {
                     path: 'children', model: Thread,
                     populate: {path: 'author', model: User, select: 'name username image id'}
-                }
+                }]
             })
     } catch (error: any) {
         throw new Error(`Failed to fetch posts: ${error.message}`)

@@ -3,8 +3,8 @@ import Image from "next/image";
 import {formatDateForPost, formatDateString} from "@/lib/utils";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import React from "react";
-import {FacebookIcon, FacebookShareButton} from "next-share";
 import Share from "@/components/cards/Share";
+import EditCardForm from "@/components/forms/EditCardForm";
 import {usePathname} from "next/navigation";
 
 interface Params {
@@ -42,9 +42,9 @@ const ThreadCard = ({
     return (
         <>
             <article id={`${id}`}
-                className={`flex w-full flex-col ${isComment ? `px-0 xs:px-7 ${!child?.author && 'border-b-[1px] border-dark-3'}` : 'bg-dark-2 p-7 rounded-xl'}`}>
+                     className={`flex w-full flex-col ${isComment ? `px-0 xs:px-7 ${!child?.author && 'border-b-[1px] border-dark-3'}` : 'bg-dark-2 p-7 rounded-xl'}`}>
                 <div
-                    className={`${isComment && !isChild && 'mt-5'} ${isComment && (child ? 'mb-2' : 'mb-5')} flex items-start justify-between`}>
+                    className={`${isComment && !isChild && 'mt-5'} ${isComment && (child ? 'mb-2' : 'mb-5')} flex items-start justify-between relative`}>
                     <div className={"flex w-full flex-1 flex-row gap-4"}>
                         <div className={"flex flex-col items-center"}>
                             <Link href={`/profile/@${author.username}`} className={"relative h-11 w-11"}>
@@ -53,17 +53,21 @@ const ThreadCard = ({
                             </Link>
 
                             {(comments.length > 0 || isMain) && <div className={"thread-card_bar"}/>}
+
+                            {currentUserId === author.id &&
+                                <EditCardForm id={id}/>
+                            }
                         </div>
                         <div className={`flex w-full flex-col`}>
                             <Link href={`/profile/@${author.username}`}
                                   className={"w-fit flex gap-2 text-gray-1 items-center"}>
                                 <h4 className={"cursor-pointer text-base-semibold text-light-1"}>{author.name}</h4>
-                                <h5>@{author.username} ·</h5>
+                                <h5>@{author.username}</h5>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <h5>
-                                                {formatDateForPost(createdAt)}
+                                            <h5 className={"hidden md:block"}>
+                                                · {formatDateForPost(createdAt)}
                                             </h5>
                                         </TooltipTrigger>
                                         <TooltipContent className={"bg-dark-2 border-none text-light-2"}>
@@ -84,7 +88,8 @@ const ThreadCard = ({
                                     </div>
                                     <Link href={`/thread/${id}`}
                                           className={'flex items-center text-gray-1 text-base-regular'}>
-                                        <div className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
+                                        <div
+                                            className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
                                             <Image src={"/assets/reply.svg"} alt={"reply"} width={24} height={24}
                                                    className={"cursor-pointer object-contain"}/>
                                         </div>
@@ -137,7 +142,8 @@ const ThreadCard = ({
                     <p className='text-subtle-medium text-gray-1 mt-5 flex items-center'>
                         {formatDateString(createdAt)}
                         {community && ` - ${community?.name} Community`}
-                        {community && <Image src={community.image} alt={community.name} width={14} height={14} className={"ml-1 rounded-full object-cover"}/> }
+                        {community && <Image src={community.image} alt={community.name} width={14} height={14}
+                                             className={"ml-1 h-[14px] hidden md:block rounded-full object-cover"}/>}
                     </p>
                 )}
             </article>

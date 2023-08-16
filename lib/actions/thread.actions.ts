@@ -13,6 +13,12 @@ interface CreateThreadProps {
     path: string
 }
 
+interface UpdateThreadProps {
+    text: string;
+    id: string;
+    path: string;
+}
+
 interface CreateCommentProps {
     threadId: string,
     text: string,
@@ -29,8 +35,6 @@ export async function createThread({text, author, communityId, path}: CreateThre
             { _id: 1 }
         );
 
-        console.log(communityId)
-
         const createdThread = await Thread.create({text, author, community: communityIdObject});
 
         await User.findByIdAndUpdate(author, {$push: {threads: createdThread._id}});
@@ -40,6 +44,21 @@ export async function createThread({text, author, communityId, path}: CreateThre
                 $push: { threads: createdThread._id },
             });
         }
+
+        revalidatePath(path);
+    } catch (error: any) {
+        throw new Error(`Error creating thread: ${error.message}`)
+    }
+}
+
+export async function updateThread({text, id, path}: UpdateThreadProps) {
+    try {
+        connectToDB();
+
+        const thread = await Thread.findById(id);
+        if(!thread) throw new Error("Not found thread");
+
+        await Thread.findByIdAndUpdate(thread._id, {text});
 
         revalidatePath(path);
     } catch (error: any) {
