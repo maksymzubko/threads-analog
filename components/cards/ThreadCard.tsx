@@ -132,6 +132,7 @@ const ThreadCard = ({
                     <p className='text-subtle-medium text-gray-1 mt-5 flex items-center'>
                         {formatDateString(createdAt)}
                         {community && ` - ${community?.name} Community`}
+                        {community && <Image src={community.image} alt={community.name} width={14} height={14} className={"ml-1 rounded-full object-cover"}/> }
                     </p>
                 )}
             </article>
