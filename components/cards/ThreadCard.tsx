@@ -2,6 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import {formatDateForPost, formatDateString} from "@/lib/utils";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+import React from "react";
+import {FacebookIcon, FacebookShareButton} from "next-share";
+import Share from "@/components/cards/Share";
+import {usePathname} from "next/navigation";
 
 interface Params {
     id: string,
@@ -86,11 +90,12 @@ const ThreadCard = ({
                                         </div>
                                         {(isComment || isMain) && comments.length > 0 && <p>{comments.length}</p>}
                                     </Link>
+
                                     <div
                                         className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                                        <Image src={"/assets/share.svg"} alt={"share"} width={24} height={24}
-                                               className={"cursor-pointer object-contain"}/>
+                                        <Share url={`${process.env.HOST}/thread/${id}`} text={content}/>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
