@@ -1,6 +1,6 @@
 "use client";
 
-import {Form, FormControl, FormField, FormItem, FormLabel} from "@/components/ui/form";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
 import {usePathname, useRouter} from "next/navigation";
@@ -39,7 +39,7 @@ const Comment = ({threadId, currentUserImg, currentUserId}: Params) => {
     return(
         <div>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="comment-form">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="comment-form peer">
                     <FormField
                         control={form.control}
                         name="thread"
@@ -60,7 +60,7 @@ const Comment = ({threadId, currentUserImg, currentUserId}: Params) => {
                         )}
                     />
 
-                    <Button type={"submit"} className={'comment-form_btn'}>
+                    <Button type={"submit"} disabled={!form.formState.isValid} className={'comment-form_btn disabled:opacity-30'}>
                         Reply
                     </Button>
                 </form>

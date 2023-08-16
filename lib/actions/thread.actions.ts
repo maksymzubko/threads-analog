@@ -45,7 +45,10 @@ export async function fetchThreads(pageNumber = 1, pageSize = 20) {
             .skip(skipAmount)
             .limit(pageSize)
             .populate({path: 'author', model: User})
-            .populate({path: 'children', populate: {path: 'author', model: User, select: "_id name parentId image"}})
+            .populate({
+                path: 'children',
+                populate: {path: 'author', model: User, select: "_id name username parentId image"}
+            })
 
         const totalThreadsCount = await Thread.countDocuments({parentId: {$in: [null, undefined]}});
         const threads = await threadsQuery.exec();
@@ -62,19 +65,26 @@ export async function fetchThreadById(threadId: string) {
     try {
         connectToDB();
 
-        const thread = Thread
+        return await Thread
             .findById(threadId)
             .populate({path: 'author', model: User, select: "_id id name image"})
             .populate([
-                {path: 'author', model: User, select: "_id id name parentId image"},
+                {path: 'author', model: User, select: "_id id name username parentId image"},
                 {
                     path: 'children',
                     model: Thread,
-                    populate: {path: 'author', model: User, select: "_id id name parentId image"}
+                    populate: [{path: 'author', model: User, select: "_id id name username parentId image"}, {
+                        path: 'children',
+                        model: Thread,
+                        populate: [
+                            {path: 'author', model: User, select: "_id id name username parentId image"}, {
+                                path: 'children',
+                                model: Thread,
+                                populate: {path: 'author', model: User, select: "_id id name username parentId image"}
+                            }]
+                    }]
                 }
             ]).exec();
-
-        return thread;
     } catch (error: any) {
         throw new Error(`Error fetching thread: ${error.message}`)
     }
@@ -86,7 +96,7 @@ export async function addCommentToThread({threadId, text, userId, path}: CreateC
 
         const originalThread = await Thread.findById(threadId);
 
-        if(!originalThread) {
+        if (!originalThread) {
             throw new Error("Thread not found!");
         }
 
