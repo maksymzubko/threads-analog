@@ -78,7 +78,7 @@ const AccountProfile = ({user, btnTitle}: Props) => {
             }
         }
 
-        await updateUser({
+        const result = await updateUser({
                 userId: user.id,
                 username: values.username,
                 name: values.name,
@@ -86,6 +86,11 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                 image: values.profile_photo,
                 path: pathname
             });
+
+        if(result?.error){
+            form.setError(result.error.name, result.error.error);
+            return;
+        }
 
         if(pathname === '/profile/edit') {
             router.back();
@@ -145,10 +150,12 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                             <FormControl>
                                 <Input
                                     type={"text"}
+                                    placeholder={"This is your public display name."}
                                     className={"account-form_input no-focus"}
                                     {...field}
                                 />
                             </FormControl>
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -163,10 +170,12 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                             <FormControl>
                                 <Input
                                     type={"text"}
+                                    placeholder={"This is your username."}
                                     className={"account-form_input no-focus"}
                                     {...field}
                                 />
                             </FormControl>
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -181,14 +190,18 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                             <FormControl>
                                 <Textarea
                                     rows={10}
-                                    className={"account-form_input no-focus"}
+                                    placeholder={"This is your bio."}
+                                    className={"account-form_input no-focus max-h-[300px] min-h-[200px]"}
                                     {...field}
                                 />
                             </FormControl>
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
-                <Button type="submit" className={"bg-primary-500"}>Submit</Button>
+                <Button type="submit" disabled={!form.formState.isValid || form.formState.isSubmitting || form.formState.isSubmitSuccessful} className={"bg-primary-500"}>
+                    {form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Submitting...' : 'Submit'}
+                </Button>
             </form>
         </Form>
     )
