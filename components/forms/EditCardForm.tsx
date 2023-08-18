@@ -66,7 +66,7 @@ const EditCardForm = ({id}: { id: string }) => {
                 </DialogHeader>
                 <DialogFooter className={"!justify-evenly flex-row items-center gap-2"}>
                     <Button className={"w-1/4"} type={"submit"} disabled={loading} onClick={handleClose}>Close</Button>
-                    <Button className={"w-1/4"} type={"submit"} disabled={loading}
+                    <Button variant={"destructive"} className={"w-1/4"} type={"submit"} disabled={loading}
                             onClick={deleteThreadEvent}>Confirm</Button>
                 </DialogFooter>
             </DialogContent>
