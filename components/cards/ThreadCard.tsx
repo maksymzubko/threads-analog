@@ -61,8 +61,8 @@ const ThreadCard = ({
                         <div className={`flex w-full flex-col`}>
                             <Link href={`/profile/@${author.username}`}
                                   className={"w-fit flex gap-2 text-gray-1 items-center"}>
-                                <h4 className={"cursor-pointer text-base-semibold text-light-1"}>{author.name}</h4>
-                                <h5>@{author.username}</h5>
+                                <h4 className={"cursor-pointer text-base-semibold text-light-1 inline-block whitespace-nowrap overflow-hidden overflow-ellipsis max-w-[80px] md:max-w-[120px] 2xl:max-w-[180px]"}>{author.name}</h4>
+                                <h5 className={"inline-block whitespace-nowrap overflow-hidden overflow-ellipsis max-w-[80px] md:max-w-[120px] 2xl:max-w-[180px]"}>@{author.username}</h5>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>

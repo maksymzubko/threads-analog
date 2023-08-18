@@ -14,6 +14,7 @@ import {isBase64Image} from "@/lib/utils";
 import {useUploadThing} from "@/lib/uploadthing";
 import {updateUser} from "@/lib/actions/user.actions";
 import {usePathname, useRouter} from "next/navigation";
+import {useUser} from "@clerk/nextjs";
 
 interface Props {
     user: {
@@ -32,6 +33,8 @@ const AccountProfile = ({user, btnTitle}: Props) => {
     const {startUpload} = useUploadThing('media');
     const router = useRouter();
     const pathname = usePathname();
+
+    const clerkUser = useUser()
 
     const form = useForm(
         {
@@ -84,13 +87,14 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                 name: values.name,
                 bio: values.bio,
                 image: values.profile_photo,
-                path: pathname
+                path: pathname,
             });
 
         if(result?.error){
             form.setError(result.error.name, result.error.error);
             return;
         }
+        await clerkUser.user?.update({username: values.username.toLowerCase()});
 
         if(pathname === '/profile/edit') {
             router.back();
