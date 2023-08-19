@@ -60,11 +60,11 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
     }
 
     return (
-        <div className={"flex items-start mt-10 gap-4"}>
-            {/*<div>*/}
-            {/*    <Image src={currentUserImg} alt={"Profile image"} width={48} height={48}*/}
-            {/*           className={"rounded-full object-cover"}/>*/}
-            {/*</div>*/}
+        <div className={"flex items-start mt-10 gap-4 border-dark-3 p-5 rounded-2xl border-[1px]"}>
+            <div>
+                <Image src={currentUserImg} alt={"Profile image"} width={48} height={48}
+                       className={"rounded-full object-cover"}/>
+            </div>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}
                       className="w-full flex flex-col justify-start gap-5 relative peer">
@@ -75,7 +75,7 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
                             <FormItem className={"flex w-full gap-3 relative"}>
                                 <FormControl>
                                     <div
-                                        className={'w-full field no-focus border border-dark-4 bg-dark-3 text-light-1 max-h-[200px] min-h-[150px]'}>
+                                        className={'w-full field no-focus border-none border-dark-4 text-light-1 max-h-[200px] min-h-[150px]'}>
                                         <CustomTextField search={field.value}
                                                          disabled={form.formState.isSubmitting}
                                                          isComment form={form} field={field} userId={currentUserId}/>
@@ -84,6 +84,8 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
                             </FormItem>
                         )}
                     />
+
+                    <div className={"border-[1px] border-dark-3"}/>
 
                     <div className={"flex w-full justify-between"}>
                         <div className={"cursor-pointer relative"}>

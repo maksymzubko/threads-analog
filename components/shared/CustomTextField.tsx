@@ -81,9 +81,10 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
     return (
         <>
             <MentionsInput disabled={disabled} style={{
-                "&multiLine": {control: {outline: "none", fontSize: "16px", minHeight: isComment ? '150px' : '300px'}},
+                "&multiLine": {control: {outline: "none", fontSize: "16px", minHeight: isComment ? '150px' : '300px', border: 'none'}},
                 suggestions: {
                     list: {
+                        background: isComment && 'none',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '10px',
@@ -92,7 +93,8 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
                     }
                 }
             }}
-                           className={`flex gap-4 relative bg-[#020617] border-[1px] [&_textarea]:rounded-2xl [&_textarea]:outline-none [&_textarea]:!text-[20px]`}
+                           placeholder={"Whats going on?!"}
+                           className={`flex gap-4 relative bg-none border-none [&_textarea]:rounded-2xl [&_textarea]:outline-none [&_textarea]:!text-[20px]`}
                            {...field}
                            onChange={onChange}
                            rows={isComment ? 10 : 15}
