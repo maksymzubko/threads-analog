@@ -5,19 +5,18 @@ import {formatDateStringByOptions} from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
 
-const HoverUserCard = ({username, image, createdAt, bio, name}: {
+const HoverUserCard = ({username, image, createdAt, bio, name, children}: {
     username: string,
     image: string,
     createdAt: string,
     bio: string,
     name: string
+    children: any;
 }) => {
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
-                <Link className={"text-primary-500"} href={`/profile/@${username}`}>
-                    @{username}
-                </Link>
+                {children}
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <div className="flex justify-between space-x-4">

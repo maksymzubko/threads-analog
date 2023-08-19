@@ -18,10 +18,9 @@ import Image from "next/image";
 
 interface UserMentions {
     user: string,
-    range: number[]
 }
 
-function PostThread({userId, threadId, text, isMobile}: { userId: string, threadId?: string; text?: string; isMobile: boolean;}) {
+function PostThread({userId, threadId, text, isMobile, mentioned}: { userId: string, threadId?: string; text?: string; isMobile: boolean; mentioned?: any[];}) {
     const router = useRouter();
     const pathname = usePathname();
     const [showEmoji, setShowEmoji] = useState(false)
@@ -33,7 +32,7 @@ function PostThread({userId, threadId, text, isMobile}: { userId: string, thread
             defaultValues: {
                 thread: text ? text : '',
                 accountId: userId,
-                mentions: [] as UserMentions[]
+                mentions: mentioned ?? [] as UserMentions[]
             }
         });
 

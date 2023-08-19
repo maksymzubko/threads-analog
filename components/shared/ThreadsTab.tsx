@@ -55,7 +55,10 @@ const ThreadsTab = async ({
 
     return (
         <section className={"mt-9 flex flex-col gap-10"}>
-            {result.threads.map((thread: any) => {
+            {result
+                .threads
+                .sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime())
+                .map((thread: any) => {
                 const authorObj = accountType === 'User' ?
                     {name: result.name, image: result.image, id: result.id, username: result.username} :
                     {name: thread.author.name, image: thread.author.image, id: thread.author.id, username: thread.author.username};

@@ -18,7 +18,10 @@ interface TagBarProps {
 const CustomTextField = ({search, userId, disabled, field, form, isComment}: TagBarProps) => {
     const [results, setResults] = useState<{ users: any[], isNext: boolean; }>({users: [], isNext: false})
     const [loading, setLoading] = useState(true)
-    const [query, setQuery] = useState({query: "", callback:(data:any)=>{}});
+    const [query, setQuery] = useState({
+        query: "", callback: (data: any) => {
+        }
+    });
 
     // query after 0.3s of no input
     useEffect(() => {
@@ -33,7 +36,7 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
         }
     }, [query]);
 
-    const fetchUserByFilter = (search: string, callback: (item: any)=>void) => {
+    const fetchUserByFilter = (search: string, callback: (item: any) => void) => {
         fetchUsers({
             userId: userId,
             searchString: search,
@@ -57,17 +60,28 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
         target: { value: string }
     }, newValue: string, newPlainTextValue: string, mentions: MentionItem[]) => {
         field?.onChange(event);
-        const transformedMentions = mentions.map(m=>{
-            return {user: m.id, range: [m.index, m.childIndex, m.plainTextIndex]};
+        const transformedMentions = mentions.map(m => {
+            return {user: m.id};
         })
         //@ts-ignore
         form.setValue('mentions', transformedMentions);
     }
 
+    const onAdd = (id: (string | number), display: string) => {
+        const mentions = form.getValues().mentions;
+        if (!mentions.some((m:any) => m.user === id)) {
+            mentions.push({
+                user: id
+            })
+            //@ts-ignore
+            form.setValue('mentions', mentions);
+        }
+    }
+
     return (
         <>
             <MentionsInput disabled={disabled} style={{
-                "&multiLine": {control: {outline: "none", fontSize: "16px"}},
+                "&multiLine": {control: {outline: "none", fontSize: "16px", minHeight: isComment ? '150px' : '300px'}},
                 suggestions: {
                     list: {
                         display: 'flex',
@@ -78,7 +92,7 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
                     }
                 }
             }}
-                           className={`flex gap-4 relative min-h-[${isComment ? '150px' : '300px'}] bg-[#020617] border-[1px] [&_textarea]:rounded-2xl [&_textarea]:outline-none [&_textarea]:!text-[20px]`}
+                           className={`flex gap-4 relative bg-[#020617] border-[1px] [&_textarea]:rounded-2xl [&_textarea]:outline-none [&_textarea]:!text-[20px]`}
                            {...field}
                            onChange={onChange}
                            rows={isComment ? 10 : 15}
@@ -95,10 +109,12 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
                                </div>
                            }}>
                 <Mention
+                    onAdd={onAdd}
+                    appendSpaceOnAdd={true}
                     trigger="@"
                     displayTransform={(id, display) => `@${display}`}
                     renderSuggestion={(suggestion, search, highlightedDisplay, index, focused) => {
-                        if(!results.users.length) return <></>
+                        if (!results.users.length) return <></>
 
                         const user = results.users.find(u => u._id.toString() === suggestion.id.toString());
                         return <UserCard
