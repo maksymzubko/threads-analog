@@ -69,6 +69,7 @@ const ThreadsTab = async ({
                             content={thread.text}
                             author={authorObj}
                             mentions={thread.mentioned}
+                            likes={thread.likes}
                             community={
                                 accountType === "Community"
                                     ? { name: result.name, id: result.id, image: result.image }

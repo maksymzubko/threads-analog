@@ -11,58 +11,100 @@ import * as zod from "zod";
 import {addCommentToThread, createThread} from "@/lib/actions/thread.actions";
 import {Input} from "@/components/ui/input";
 import Image from "next/image";
+import CustomTextField from "@/components/shared/CustomTextField";
+import {useState} from "react";
+import {randomInteger} from "@/lib/utils";
+import EmojiPicker, {EmojiClickData, Theme} from "emoji-picker-react";
 
 interface Params {
     threadId: string;
     currentUserImg: string;
     currentUserId: string;
+    isMobile: boolean;
 }
 
-const Comment = ({threadId, currentUserImg, currentUserId}: Params) => {
-    const router = useRouter();
+const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) => {
     const pathname = usePathname();
+    const [showEmoji, setShowEmoji] = useState(false)
 
     const form = useForm(
         {
             resolver: zodResolver(CommentValidation),
             defaultValues: {
                 thread: '',
+                mentions: []
             }
         });
 
     const onSubmit = async (values: zod.infer<typeof CommentValidation>) => {
-        await addCommentToThread({text: values.thread, threadId, userId: JSON.parse(currentUserId), path: pathname});
+        console.log('asd')
+        setShowEmoji(false);
+        await addCommentToThread({
+            text: values.thread,
+            threadId,
+            userId: JSON.parse(currentUserId),
+            path: pathname,
+            mentions: values.mentions
+        });
 
         form.reset();
     }
 
-    return(
-        <div>
+    const onSmileClick = (emoji: EmojiClickData) => {
+        form.setValue('thread', `${form.getValues('thread')}${emoji.emoji}`);
+    }
+
+    const handleStateEmoji = () => {
+        console.log('click')
+        if (!form.formState.isSubmitting || form.formState.isSubmitSuccessful) {
+            setShowEmoji(!showEmoji)
+        }
+    }
+
+    return (
+        <div className={"flex items-start mt-10 gap-4"}>
+            {/*<div>*/}
+            {/*    <Image src={currentUserImg} alt={"Profile image"} width={48} height={48}*/}
+            {/*           className={"rounded-full object-cover"}/>*/}
+            {/*</div>*/}
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="comment-form peer">
+                <form onSubmit={form.handleSubmit(onSubmit)}
+                      className="w-full flex flex-col justify-start gap-5 relative peer">
                     <FormField
                         control={form.control}
                         name="thread"
                         render={({field}) => (
-                            <FormItem className={"flex w-full items-center gap-3"}>
-                                <FormLabel>
-                                    <Image src={currentUserImg} alt={"Profile image"} width={48} height={48} className={"rounded-full object-cover"}/>
-                                </FormLabel>
-                                <FormControl className={'bg-transparent border-none'}>
-                                    <Input
-                                        type={'text'}
-                                        placeholder={"Comment..."}
-                                        className={"no-focus text-light-1 outline-none"}
-                                        {...field}
-                                    />
+                            <FormItem className={"flex w-full gap-3 relative"}>
+                                <FormControl>
+                                    <div
+                                        className={'w-full field no-focus border border-dark-4 bg-dark-3 text-light-1 max-h-[200px] min-h-[150px]'}>
+                                        <CustomTextField search={field.value}
+                                                         disabled={form.formState.isSubmitting}
+                                                         isComment form={form} field={field} userId={currentUserId}/>
+                                    </div>
                                 </FormControl>
                             </FormItem>
                         )}
                     />
 
-                    <Button type={"submit"} disabled={!form.formState.isValid} className={'comment-form_btn disabled:opacity-30'}>
-                        Reply
-                    </Button>
+                    <div className={"flex w-full justify-between"}>
+                        <div className={"cursor-pointer relative"}>
+                            <Image onClick={handleStateEmoji} src={'/assets/emoji.png'} className={"invert"} alt={'Emoji'} width={32} height={32}/>
+                            <div className={`${showEmoji ? 'flex' : 'hidden'} absolute z-50 top-[50px]`}>
+                                <EmojiPicker height={isMobile ? 250 : 350} lazyLoadEmojis={true}
+                                             searchDisabled={isMobile}
+                                             onEmojiClick={onSmileClick} previewConfig={{showPreview: false}}
+                                             theme={Theme.DARK}/>
+                            </div>
+                        </div>
+
+                        <Button type={"submit"}
+                                disabled={!form.formState.isValid || form.formState.isSubmitting}
+                                className={'bg-primary-500'}>
+                            {form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Replying...' : 'Reply'}
+                        </Button>
+                    </div>
+
                 </form>
             </Form>
         </div>

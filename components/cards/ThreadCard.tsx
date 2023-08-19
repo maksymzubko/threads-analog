@@ -2,10 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import {formatDateForPost, formatDateString} from "@/lib/utils";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
-import React from "react";
-import Share from "@/components/cards/Share";
+import React, {useState} from "react";
 import EditCardForm from "@/components/forms/EditCardForm";
 import HoverUserCard from "@/components/cards/HoverUserCard";
+import ThreadActions from "@/components/shared/ThreadActions";
 
 interface Params {
     id: string,
@@ -21,6 +21,7 @@ interface Params {
     isChild?: boolean;
     index?: number;
     mentions?: any;
+    likes: any[];
 }
 
 const ThreadCard = ({
@@ -35,8 +36,9 @@ const ThreadCard = ({
                         isComment,
                         isMain,
                         isChild,
+                        likes,
                         index,
-                        mentions
+                        mentions,
                     }: Params) => {
     let _index = index ?? 0;
     const child = comments?.at(0) ?? null;
@@ -99,30 +101,7 @@ const ThreadCard = ({
 
                             <p className={"mt-2 text-small-regular text-light-2"}>{normalizeContent()}</p>
 
-                            <div className={`mt-5 flex flex-col gap-3`}>
-                                <div className={"flex justify-between md:justify-start gap-3.5"}>
-                                    <div
-                                        className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                                        <Image src={"/assets/heart-gray.svg"} alt={"heart"} width={24} height={24}
-                                               className={"cursor-pointer object-contain"}/>
-                                    </div>
-                                    <Link href={`/thread/${id}`}
-                                          className={'flex items-center text-gray-1 text-base-regular'}>
-                                        <div
-                                            className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                                            <Image src={"/assets/reply.svg"} alt={"reply"} width={24} height={24}
-                                                   className={"cursor-pointer object-contain"}/>
-                                        </div>
-                                        {(isComment || isMain) && comments.length > 0 && <p>{comments.length}</p>}
-                                    </Link>
-
-                                    <div
-                                        className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                                        <Share url={`${process.env.HOST}/thread/${id}`} text={content}/>
-                                    </div>
-
-                                </div>
-                            </div>
+                            <ThreadActions currentUserId={currentUserId} likes={likes.map(l=>l.user.id)} id={id} content={content} commentsLength={comments.length} isComment={isComment} isMain={isMain}/>
                         </div>
                     </div>
                 </div>
@@ -181,6 +160,7 @@ const ThreadCard = ({
                     mentions={child.mentioned}
                     isComment
                     isChild
+                    likes={child.likes}
                     index={_index + 1}
                 />
             }

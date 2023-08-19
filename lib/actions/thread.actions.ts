@@ -25,7 +25,13 @@ interface CreateCommentProps {
     threadId: string,
     text: string,
     userId: string,
-    path: string
+    path: string,
+    mentions: any[]
+}
+
+interface LikeProps {
+    threadId: string,
+    userId: string,
 }
 
 export async function createThread({text, author, communityId, mentions, path}: CreateThreadProps) {
@@ -86,6 +92,14 @@ export async function fetchThreads(pageNumber = 1, pageSize = 20) {
                     path: 'user',
                     model: User,
                     select: "_id id username image name bio registeredAt"
+                }
+            })
+            .populate({
+                path: 'likes',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id"
                 }
             })
             .populate({
@@ -189,20 +203,77 @@ export async function fetchThreadById(threadId: string) {
                 select: "_id id name image",
             })
             .populate([
+                {
+                    path: 'likes',
+                    populate: {
+                        path: 'user',
+                        model: User,
+                        select: "_id id"
+                    }
+                },
+                {
+                    path: 'mentioned',
+                    populate: {
+                        path: 'user',
+                        model: User,
+                        select: "_id id image registeredAt bio name username"
+                    }
+                },
                 {path: 'author', model: User, select: "_id id name username parentId image"},
                 {
                     path: 'children',
                     model: Thread,
-                    populate: [{path: 'author', model: User, select: "_id id name username parentId image"}, {
-                        path: 'children',
-                        model: Thread,
-                        populate: [
-                            {path: 'author', model: User, select: "_id id name username parentId image"}, {
-                                path: 'children',
-                                model: Thread,
-                                populate: {path: 'author', model: User, select: "_id id name username parentId image"}
-                            }]
-                    }]
+                    populate: [
+                        {path: 'author', model: User, select: "_id id name username parentId image"},
+                        {
+                            path: 'likes',
+                            populate: {
+                                path: 'user',
+                                model: User,
+                                select: "_id id"
+                            }
+                        },
+                        {
+                            path: 'mentioned',
+                            populate: {
+                                path: 'user',
+                                model: User,
+                                select: "_id id image registeredAt bio name username"
+                            }
+                        },
+                        {
+                            path: 'children',
+                            model: Thread,
+                            populate: [
+                                {path: 'author', model: User, select: "_id id name username parentId image"},
+                                {
+                                    path: 'likes',
+                                    populate: {
+                                        path: 'user',
+                                        model: User,
+                                        select: "_id id"
+                                    }
+                                },
+                                {
+                                    path: 'mentioned',
+                                    populate: {
+                                        path: 'user',
+                                        model: User,
+                                        select: "_id id image registeredAt bio name username"
+                                    }
+                                },
+                                {
+                                    path: 'children',
+                                    model: Thread,
+                                    populate: {
+                                        path: 'author',
+                                        model: User,
+                                        select: "_id id name username parentId image"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 }
             ])
             .populate({
@@ -212,6 +283,14 @@ export async function fetchThreadById(threadId: string) {
                     model: User,
                     select: "_id id image registeredAt bio name username"
                 }
+            })
+            .populate({
+                path: 'likes',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id"
+                }
             }).exec();
 
     } catch (error: any) {
@@ -219,7 +298,7 @@ export async function fetchThreadById(threadId: string) {
     }
 }
 
-export async function addCommentToThread({threadId, text, userId, path}: CreateCommentProps) {
+export async function addCommentToThread({threadId, text, userId, path, mentions = []}: CreateCommentProps) {
     try {
         connectToDB();
 
@@ -229,7 +308,7 @@ export async function addCommentToThread({threadId, text, userId, path}: CreateC
             throw new Error("Thread not found!");
         }
 
-        const commentThread = new Thread({text, author: userId, parentId: threadId})
+        const commentThread = new Thread({text, author: userId, parentId: threadId, mentioned: mentions})
         const savedCommentThread = await commentThread.save();
 
         originalThread.children.push(savedCommentThread._id);
@@ -238,5 +317,41 @@ export async function addCommentToThread({threadId, text, userId, path}: CreateC
         revalidatePath(path);
     } catch (error: any) {
         throw new Error(`Error adding comment: ${error.message}`)
+    }
+}
+
+export async function likeFuncThread({threadId, userId}: LikeProps) {
+    try {
+        connectToDB();
+
+        const originalThread = await Thread.findById(threadId)
+            .populate({path: 'likes', populate: {path: 'user', model: User, select: '_id id'}});
+
+        if (!originalThread) {
+            throw new Error("Thread not found!");
+        }
+
+        const user = await User.findOne({id: userId});
+
+        if (!user) {
+            throw new Error("User not found!");
+        }
+
+        if (originalThread?.likes?.some((l: any) => l.user.id === userId)) {
+            originalThread.likes = originalThread.likes.filter((l: any) => l.user.id !== userId);
+        } else {
+            originalThread.likes.push({user: user._id});
+        }
+
+        await originalThread.save();
+
+        return (await Thread
+            .findById(threadId)
+            .select('_id likes')
+            .populate({path: 'likes', populate: {path: 'user', model: User, select: '_id id'}}))
+            ?.likes.map((l: any) => l?.user?.id);
+
+    } catch (error: any) {
+        throw new Error(`Error likeFunc thread: ${error.message}`)
     }
 }

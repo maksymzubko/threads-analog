@@ -4,18 +4,18 @@ import React, {useEffect, useState} from 'react';
 import {Mention, MentionItem, MentionsInput, SuggestionDataItem} from "react-mentions";
 import {fetchUsers} from "@/lib/actions/user.actions";
 import UserCard from "@/components/cards/UserCard";
-import {ControllerRenderProps, UseFormReturn} from "react-hook-form";
 
 interface TagBarProps {
     search: string;
     disabled?: boolean;
     userId: string;
-    field?: ControllerRenderProps<{ thread: string; accountId: string; }, "thread">;
-    form: UseFormReturn<{thread: string, accountId: string, mentions: never[]}, any, undefined>;
+    field?: any;
+    form: any;
+    isComment?: boolean;
 }
 
 
-const CustomTextField = ({search, userId, disabled, field, form}: TagBarProps) => {
+const CustomTextField = ({search, userId, disabled, field, form, isComment}: TagBarProps) => {
     const [results, setResults] = useState<{ users: any[], isNext: boolean; }>({users: [], isNext: false})
     const [loading, setLoading] = useState(true)
     const [query, setQuery] = useState({query: "", callback:(data:any)=>{}});
@@ -78,10 +78,10 @@ const CustomTextField = ({search, userId, disabled, field, form}: TagBarProps) =
                     }
                 }
             }}
-                           className={"flex gap-4 relative min-h-[300px] bg-[#020617] border-[1px] [&_textarea]:rounded-2xl [&_textarea]:outline-none [&_textarea]:!text-[24px]"}
+                           className={`flex gap-4 relative min-h-[${isComment ? '150px' : '300px'}] bg-[#020617] border-[1px] [&_textarea]:rounded-2xl [&_textarea]:outline-none [&_textarea]:!text-[20px]`}
                            {...field}
                            onChange={onChange}
-                           rows={15}
+                           rows={isComment ? 10 : 15}
                            value={search}
                            customSuggestionsContainer={(children) => {
                                //@ts-ignore

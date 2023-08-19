@@ -12,21 +12,18 @@ import {createThread, updateThread} from "@/lib/actions/thread.actions";
 import {useOrganization} from "@clerk/nextjs";
 import CustomTextField from "@/components/shared/CustomTextField";
 import EmojiPicker, {EmojiClickData, Theme} from "emoji-picker-react";
-import {randomInteger} from "@/lib/utils";
+
 import {useState} from "react";
 import Image from "next/image";
-import {MentionItem} from "react-mentions";
 
 interface UserMentions {
     user: string,
     range: number[]
 }
-const emojiList = ['1f601', '1f618', '1fae3', '1fae1'];
 
 function PostThread({userId, threadId, text, isMobile}: { userId: string, threadId?: string; text?: string; isMobile: boolean;}) {
     const router = useRouter();
     const pathname = usePathname();
-    const [emoji, setEmoji] = useState(emojiList[randomInteger(0, emojiList.length - 1)])
     const [showEmoji, setShowEmoji] = useState(false)
 
     const {organization} = useOrganization();
@@ -84,8 +81,13 @@ function PostThread({userId, threadId, text, isMobile}: { userId: string, thread
                         <FormItem className={"flex flex-col w-full gap-3 relative"}>
                             <FormControl
                                 className={'no-focus border border-dark-4 bg-dark-3 text-light-1 max-h-[400px] min-h-[250px]'}>
-                                {/*@ts-ignore*/}
-                                <CustomTextField search={field.value} disabled={form.formState.isSubmitting || form.formState.isSubmitSuccessful} form={form} field={field} userId={userId}/>
+                                <CustomTextField
+                                    search={field.value}
+                                    disabled={form.formState.isSubmitting || form.formState.isSubmitSuccessful}
+                                    form={form}
+                                    field={field}
+                                    userId={userId}
+                                />
                             </FormControl>
                             <FormMessage/>
                         </FormItem>
