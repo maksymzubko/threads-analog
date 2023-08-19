@@ -37,7 +37,6 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
         });
 
     const onSubmit = async (values: zod.infer<typeof CommentValidation>) => {
-        console.log('asd')
         setShowEmoji(false);
         await addCommentToThread({
             text: values.thread,
@@ -55,7 +54,6 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
     }
 
     const handleStateEmoji = () => {
-        console.log('click')
         if (!form.formState.isSubmitting || form.formState.isSubmitSuccessful) {
             setShowEmoji(!showEmoji)
         }
