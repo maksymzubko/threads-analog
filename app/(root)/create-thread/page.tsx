@@ -22,11 +22,11 @@ async function Page() {
     );
 
     return (
-        <>
+        <div>
             <h1 className={'head-text'}>Create Thread</h1>
 
-            <PostThread userId={userInfo?._id.toString() ?? ""} isMobile={isMobileView}/>
-        </>
+            <PostThread userId={userInfo?._id.toString() ?? ""} currentUserImg={userInfo?.image} isMobile={isMobileView}/>
+        </div>
     )
 }
 

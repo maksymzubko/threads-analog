@@ -12,7 +12,7 @@ interface Params {
     currentUserId: string,
     parentId: string | null,
     content: string,
-    author: { name: string, image: string, id: string; username: string; },
+    author: { name: string, image: string, id: string; username: string; bio: string; },
     community?: { id: string, name: string, image: string } | null
     createdAt: string
     comments: any[];
@@ -22,6 +22,7 @@ interface Params {
     index?: number;
     mentions?: any;
     likes: any[];
+    isEdited?: boolean;
 }
 
 const ThreadCard = ({
@@ -39,6 +40,7 @@ const ThreadCard = ({
                         likes,
                         index,
                         mentions,
+                        isEdited,
                     }: Params) => {
     let _index = index ?? 0;
     const child = comments?.at(0) ?? null;
@@ -87,15 +89,25 @@ const ThreadCard = ({
                             }
                         </div>
                         <div className={`flex w-full flex-col`}>
-                            <Link href={`/profile/@${author.username}`}
-                                  className={"w-fit flex gap-2 text-gray-1 items-center"}>
-                                <h4 className={"cursor-pointer text-base-semibold text-light-1 inline-block whitespace-nowrap overflow-hidden overflow-ellipsis max-w-[80px] md:max-w-[120px] 2xl:max-w-[180px]"}>{author.name}</h4>
-                                <h5 className={"inline-block whitespace-nowrap overflow-hidden overflow-ellipsis max-w-[80px] md:max-w-[120px] 2xl:max-w-[180px]"}>@{author.username}</h5>
+                            <div className={"w-fit flex gap-2 text-gray-1 items-center"}>
+                                <HoverUserCard
+                                    username={author.username}
+                                    image={author.image}
+                                    createdAt={createdAt}
+                                    bio={author.bio}
+                                    name={author.name}
+                                >
+                                    <Link href={`/profile/@${author.username}`}
+                                          className={"w-fit flex gap-2 text-gray-1 items-center"}>
+                                        <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{ author.name}</h4>
+                                        <h5 className={"hover:underline"}>@{author.username} ·</h5>
+                                    </Link>
+                                </HoverUserCard>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <h5 className={"hidden md:block"}>
-                                                · {formatDateForPost(createdAt)}
+                                            <h5>
+                                                {formatDateForPost(createdAt)}
                                             </h5>
                                         </TooltipTrigger>
                                         <TooltipContent className={"bg-dark-2 border-none text-light-2"}>
@@ -103,7 +115,7 @@ const ThreadCard = ({
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                            </Link>
+                            </div>
 
                             <p className={"mt-2 text-small-regular text-light-2"}>{normalizeContent()}</p>
 
@@ -145,7 +157,7 @@ const ThreadCard = ({
                 {/*Date string with name of community (if it has)*/}
                 {!isComment && (
                     <p className='text-subtle-medium text-gray-1 mt-5 flex items-center'>
-                        {formatDateString(createdAt)}
+                        {formatDateString(createdAt)} {isEdited && ` (edited)`}
                         {community && ` - ${community?.name} Community`}
                         {community && <Image src={community.image} alt={community.name} width={14} height={14}
                                              className={"ml-1 h-[14px] hidden md:block rounded-full object-cover"}/>}
