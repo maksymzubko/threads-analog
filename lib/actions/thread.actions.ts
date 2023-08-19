@@ -11,14 +11,14 @@ interface CreateThreadProps {
     author: string,
     communityId: string | null,
     path: string,
-    mentions: { user: string, range: number[] }[]
+    mentions: { user: string }[]
 }
 
 interface UpdateThreadProps {
     text: string;
     id: string;
     path: string;
-    mentions: { user: string, range: number[] }[];
+    mentions: { user: string }[];
 }
 
 interface CreateCommentProps {
@@ -340,7 +340,7 @@ export async function likeFuncThread({threadId, userId}: LikeProps) {
         if (originalThread?.likes?.some((l: any) => l.user.id === userId)) {
             originalThread.likes = originalThread.likes.filter((l: any) => l.user.id !== userId);
         } else {
-            originalThread.likes.push({user: user._id});
+            originalThread.likes.push({user: user._id, createdAt: new Date()});
         }
 
         await originalThread.save();

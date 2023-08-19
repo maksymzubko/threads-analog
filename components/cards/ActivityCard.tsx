@@ -2,14 +2,18 @@ import Link from "next/link";
 import Image from "next/image";
 import {formatDateForPost, formatDateString} from "@/lib/utils";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+import HoverUserCard from "@/components/cards/HoverUserCard";
+import React from "react";
 
 interface Params {
     id: string,
     parentId: string | null,
     content: string,
-    author: { name: string, image: string, id: string; username: string; },
+    author: { name: string, image: string, id: string; username: string; bio?: string; },
     createdAt: string
-    comments: any[];
+    mentions: any[];
+    type: "reply" | "like" | "tag" | "tag|reply";
+    user?: any;
 }
 
 const ActivityCard = ({
@@ -18,8 +22,49 @@ const ActivityCard = ({
                           content,
                           author,
                           createdAt,
-                          comments,
+                          mentions,
+                          type,
+                          user,
                       }: Params) => {
+
+    const normalizeContent = () => {
+        const listOfValues = content.split(/(@\[[\S]+\]\([\S]+\))/);
+        return (
+            <>
+                {listOfValues.map(v => {
+                    if (!!v.match(/@\[[\S]+\]\([\S]+\)/g)) {
+                        const data = /@\[([\S]+)\]\(([\S]+)\)/g.exec(v);
+                        const name = data?.at(1) ?? "";
+                        const id = data?.at(2) ?? "";
+                        const user = mentions.find((m: any) => m.user._id.toString() === id).user;
+
+                        return <HoverUserCard
+                            username={name}
+                            image={user?.image}
+                            createdAt={user?.registeredAt}
+                            bio={user?.bio}
+                            name={user?.name}
+                        >
+                            <Link href={`/profile/@${name}`} className={"hover:underline text-primary-500"}>
+                                @{name}
+                            </Link>
+                        </HoverUserCard>
+                    } else if (v !== "")
+                        return <span>{v}</span>
+                })}
+            </>)
+    }
+
+    const getActionText = () => {
+        if (type === 'reply')
+            return <>replied on thread</>
+        if (type === 'like')
+            return <>liked your thread</>
+        if (type === 'tag')
+            return <>tagged you in thread</>
+        if (type === 'tag|reply')
+            return <>replied and tagged you in thread</>
+    }
 
     return (
         <>
@@ -30,16 +75,27 @@ const ActivityCard = ({
                         className={`flex items-start justify-between`}>
                         <div className={"flex w-full flex-1 flex-row gap-4"}>
                             <div className={"flex flex-col items-center"}>
-                                <Link href={`/profile/@${author.username}`} className={"relative h-11 w-11"}>
-                                    <Image src={author.image} alt={"Profile image"} fill
+                                <Link href={`/profile/@${type === 'like' ? user.username : author.username}`}
+                                      className={"relative h-11 w-11"}>
+                                    <Image src={type === 'like' ? user.image : author.image} alt={"Profile image"} fill
                                            className={"cursor-pointer rounded-full"}/>
                                 </Link>
                             </div>
                             <div className={`flex w-full flex-col`}>
-                                <Link href={`/profile/@${author.username}`}
-                                      className={"w-fit flex gap-2 text-gray-1 items-center"}>
-                                    <h4 className={"cursor-pointer text-base-semibold text-light-1"}>{author.name}</h4>
-                                    <h5>@{author.username} ·</h5>
+                                <div className={"w-fit flex gap-2 text-gray-1 items-center"}>
+                                    <HoverUserCard
+                                        username={type === 'like' ? user.username : author.username}
+                                        image={type === 'like' ? user.image : author.image}
+                                        createdAt={createdAt}
+                                        bio={type === 'like' ? user.bio : author.bio}
+                                        name={type === 'like' ? user.name : author.name}
+                                    >
+                                        <Link href={`/profile/@${type === 'like' ? user.username : author.username}`}
+                                              className={"w-fit flex gap-2 text-gray-1 items-center"}>
+                                            <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{type === 'like' ? user.name : author.name}</h4>
+                                            <h5 className={"hover:underline"}>@{type === 'like' ? user.username : author.username} ·</h5>
+                                        </Link>
+                                    </HoverUserCard>
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
@@ -52,34 +108,15 @@ const ActivityCard = ({
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                </Link>
-
-                                <p className={"text-small-medium text-gray-1"}>replied on thread</p>
-
-                                <p className={"mt-2 text-small-regular text-light-2"}>{content}</p>
-
-                                <div className={`mt-5 flex flex-col gap-3`}>
-                                    <div className={"flex justify-between md:justify-start gap-3.5"}>
-                                        <div
-                                            className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                                            <Image src={"/assets/heart-gray.svg"} alt={"heart"} width={24} height={24}
-                                                   className={"cursor-pointer object-contain"}/>
-                                        </div>
-                                        <Link href={`/thread/${id}`}
-                                              className={'flex items-center text-gray-1 text-base-regular'}>
-                                            <div className={"flex justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                                                <Image src={"/assets/reply.svg"} alt={"reply"} width={24} height={24}
-                                                       className={"cursor-pointer object-contain"}/>
-                                            </div>
-                                            {comments.length > 0 && <p>{comments.length}</p>}
-                                        </Link>
-                                        <div
-                                            className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                                            <Image src={"/assets/share.svg"} alt={"share"} width={24} height={24}
-                                                   className={"cursor-pointer object-contain"}/>
-                                        </div>
-                                    </div>
                                 </div>
+
+
+                                <p className={"text-small-medium text-gray-1"}>{getActionText()}</p>
+
+                                <blockquote
+                                    className={"mt-2 text-small-regular text-light-2 p-2 my-4 border-l-4 border-gray-300 bg-gray-50 dark:border-gray-500 dark:bg-gray-800"}>
+                                    {normalizeContent()}
+                                </blockquote>
                             </div>
                         </div>
                     </div>

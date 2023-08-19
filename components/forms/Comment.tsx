@@ -99,7 +99,7 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
                         <Button type={"submit"}
                                 disabled={!form.formState.isValid || form.formState.isSubmitting}
                                 className={'bg-primary-500'}>
-                            {form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Replying...' : 'Reply'}
+                            {form.formState.isSubmitting ? 'Replying...' : 'Reply'}
                         </Button>
                     </div>
 

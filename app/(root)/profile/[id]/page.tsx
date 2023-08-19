@@ -6,6 +6,7 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {profileTabs} from "@/constants";
 import Image from "next/image";
 import ThreadsTab from "@/components/shared/ThreadsTab";
+import ActivityTab from "@/components/shared/ActivityTab";
 
 const Page = async ({params}: { params: { id: string } }) => {
     const user = await currentUser();
@@ -40,11 +41,17 @@ const Page = async ({params}: { params: { id: string } }) => {
                     </TabsList>
                     {profileTabs.map((tab) =>
                         <TabsContent key={`content-${tab.label}`} value={tab.value} className={"w-full text-light-1"}>
-                            <ThreadsTab
+                            {tab.value === 'threads' ? <ThreadsTab
                                 currentUserId={user.id}
                                 accountId={userInfo.id}
                                 accountType={"User"}
-                            />
+                            /> :
+                                <ActivityTab
+                                    currentUserId={user.id}
+                                    accountId={userInfo._id}
+                                    label={tab.value as "replies" | "tags"}
+                                />
+                            }
                         </TabsContent>
                     )}
                 </Tabs>

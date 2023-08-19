@@ -29,7 +29,12 @@ async function Page({params}:{params:{id: string}}) {
         <>
             <h1 className={'head-text'}>Edit Thread</h1>
 
-            <PostThread userId={userInfo?._id} threadId={thread.id} text={thread.text} isMobile={isMobileView}/>
+            <PostThread
+                userId={userInfo?._id}
+                threadId={thread.id}
+                text={thread.text}
+                mentioned={thread.mentioned.map((m:any)=>new Object({user:m.user?._id.toString()}))}
+                isMobile={isMobileView}/>
         </>
     )
 }

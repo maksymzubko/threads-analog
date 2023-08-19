@@ -52,9 +52,15 @@ const ThreadCard = ({
                         const data = /@\[([\S]+)\]\(([\S]+)\)/g.exec(v);
                         const name = data?.at(1) ?? "";
                         const id = data?.at(2) ?? "";
-                        const user = mentions.find((m:any)=>m.user._id.toString() === id).user;
+                        const user = mentions.find((m:any)=>m.user._id.toString() === id)?.user;
 
-                        return <HoverUserCard username={name} image={user?.image} createdAt={user?.registeredAt} bio={user?.bio} name={user?.name}/>
+                        if(!user) return <span>{v}</span>
+
+                        return <HoverUserCard username={name} image={user?.image} createdAt={user?.registeredAt} bio={user?.bio} name={user?.name}>
+                            <Link href={`/profile/@${name}`} className={"hover:underline text-primary-500"}>
+                                @{name}
+                            </Link>
+                        </HoverUserCard>
                     } else if(v !== "")
                         return <span>{v}</span>
                 })}

@@ -1,12 +1,13 @@
 import '../globals.css'
-import type {Metadata} from 'next'
 import {Inter} from 'next/font/google'
 import {ClerkProvider} from "@clerk/nextjs";
 import TopBar from "@/components/shared/TopBar";
-import LeftSidebar from "@/components/shared/LeftSidebar";
 import RightSidebar from "@/components/shared/RightSidebar";
 import BottomBar from "@/components/shared/BottomBar";
 import {ThemeProvider} from "@/components/theme-provider";
+import dynamic from "next/dynamic";
+
+const LeftSidebar = dynamic(() => import('@/components/shared/LeftSidebar'), {ssr: false});
 
 const inter = Inter({subsets: ['latin']})
 

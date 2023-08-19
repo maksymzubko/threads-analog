@@ -173,7 +173,88 @@ export async function fetchUsers({
     }
 }
 
-export async function getActivity(userId: string) {
+const findReplies = async (childThreadIds: any[], userId: string) => {
+    const result: any[] = [];
+    const replies = await Thread.find({
+        _id: {$in: childThreadIds},
+        author: {$ne: userId}
+    }).populate({
+        path: 'author',
+        model: User,
+        select: 'name image id bio username _id'
+    }).populate({
+        path: 'mentioned',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image id bio username _id registeredAt'
+        }
+    })
+    replies.map(r=>{
+        result.push({...r?._doc, type: 'reply', date: new Date(r?._doc.createdAt).getTime()});
+    })
+    return result;
+}
+
+const findLikes = async (childThreadIds: any[], userId: string) => {
+    const result: any[] = [];
+    const threadsWithLikes = await Thread.find({
+        author: userId,
+        likes: {$exists: true, $ne: [], $elemMatch:{user: {$ne: userId}}}
+    }).populate({
+        path: 'likes',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image bio id username _id'
+        }
+    }).populate({
+        path: 'author',
+        model: User,
+        select: 'name image bio id username _id'
+    }).populate({
+        path: 'mentioned',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image id bio username _id registeredAt'
+        }
+    })
+    threadsWithLikes.map(th=>{
+        th.likes.map((l:any)=>{
+            console.log(th?._doc.text)
+            result.push({...th?._doc, user: l.user, type: 'like', date: new Date(l.createdAt).getTime()})
+        })
+    })
+    return result;
+}
+
+const findTags = async (childThreadIds: any[], userId: string) => {
+    const result: any[] = [];
+    const threadsWithTags = await Thread.find({
+        author: {$ne: userId},
+        mentioned: {$exists: true, $elemMatch:{user: userId}}
+    }).populate({
+        path: 'mentioned',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image id bio username _id registeredAt'
+        }
+    }).populate({
+        path: 'author',
+        model: User,
+        select: 'name image id bio username _id'
+    })
+    threadsWithTags.map(th=>{
+        th.mentioned.map((l:any)=>{
+            result.push({...th?._doc, user: l.user, type: 'tag', date: new Date(th?._doc.createdAt).getTime()})
+        })
+    })
+    return result;
+}
+
+export async function getActivity(userId: string, type: "reply" | "like" | "tag" | "all" = "all") {
     try {
         connectToDB();
 
@@ -183,16 +264,39 @@ export async function getActivity(userId: string) {
             return acc.concat(userThread.children);
         }, [])
 
-        const replies = await Thread.find({
-            _id: {$in: childThreadIds},
-            author: {$ne: userId}
-        }).populate({
-            path: 'author',
-            model: User,
-            select: 'name image id username _id'
-        })
+        const result: any[] = [];
 
-        return replies;
+        if(type === 'reply')
+            return (await findReplies(childThreadIds, userId)).sort((a,b)=>b.date-a.date);
+
+        if(type === 'like')
+            return (await findLikes(childThreadIds, userId)).sort((a,b)=>b.date-a.date);
+
+
+        if(type === 'tag')
+            return (await findTags(childThreadIds, userId)).sort((a,b)=>b.date-a.date);
+
+        if(type === 'all')
+        {
+            let replies = await findReplies(childThreadIds, userId);
+            const likes = await findLikes(childThreadIds, userId);
+            const tags = await findTags(childThreadIds, userId);
+            const fixedTags = tags.filter((item, idx) =>{
+                const index = replies.findIndex(r=>r.id===item.id);
+                if(index !== -1)
+                {
+                    replies[index].type = 'tag|reply';
+                    return false;
+                }
+                return true;
+            })
+
+            const sorted = [...replies, ...likes, ...fixedTags].sort((a,b)=>b.date-a.date);
+
+            result.push(...sorted)
+        }
+
+        return result;
     } catch (error: any) {
         throw new Error(`Failed to get user activity: ${error.message}`)
     }
