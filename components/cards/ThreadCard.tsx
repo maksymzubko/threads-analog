@@ -5,7 +5,7 @@ import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/compon
 import React from "react";
 import Share from "@/components/cards/Share";
 import EditCardForm from "@/components/forms/EditCardForm";
-import {usePathname} from "next/navigation";
+import HoverUserCard from "@/components/cards/HoverUserCard";
 
 interface Params {
     id: string,
@@ -20,6 +20,7 @@ interface Params {
     isMain?: boolean;
     isChild?: boolean;
     index?: number;
+    mentions?: any;
 }
 
 const ThreadCard = ({
@@ -34,10 +35,29 @@ const ThreadCard = ({
                         isComment,
                         isMain,
                         isChild,
-                        index
+                        index,
+                        mentions
                     }: Params) => {
     let _index = index ?? 0;
     const child = comments?.at(0) ?? null;
+
+    const normalizeContent = () => {
+        const listOfValues = content.split(/(@\[[\S]+\]\([\S]+\))/);
+        return (
+            <>
+                {listOfValues.map(v => {
+                    if (!!v.match(/@\[[\S]+\]\([\S]+\)/g)) {
+                        const data = /@\[([\S]+)\]\(([\S]+)\)/g.exec(v);
+                        const name = data?.at(1) ?? "";
+                        const id = data?.at(2) ?? "";
+                        const user = mentions.find((m:any)=>m.user._id.toString() === id).user;
+
+                        return <HoverUserCard username={name} image={user?.image} createdAt={user?.registeredAt} bio={user?.bio} name={user?.name}/>
+                    } else if(v !== "")
+                        return <span>{v}</span>
+                })}
+            </>)
+    }
 
     return (
         <>
@@ -77,7 +97,7 @@ const ThreadCard = ({
                                 </TooltipProvider>
                             </Link>
 
-                            <p className={"mt-2 text-small-regular text-light-2"}>{content}</p>
+                            <p className={"mt-2 text-small-regular text-light-2"}>{normalizeContent()}</p>
 
                             <div className={`mt-5 flex flex-col gap-3`}>
                                 <div className={"flex justify-between md:justify-start gap-3.5"}>
@@ -158,6 +178,7 @@ const ThreadCard = ({
                     author={child.author}
                     createdAt={child.createdAt}
                     comments={child.children}
+                    mentions={child.mentioned}
                     isComment
                     isChild
                     index={_index + 1}

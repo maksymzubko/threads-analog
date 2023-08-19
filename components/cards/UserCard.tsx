@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
 
-import { Button } from "../ui/button";
+import {Button} from "../ui/button";
+import Link from "next/link";
 
 interface Props {
     id: string;
@@ -11,17 +12,19 @@ interface Props {
     username: string;
     imgUrl: string;
     personType: string;
+    disableButtons?: boolean;
+    focused?: boolean;
 }
 
-function UserCard({ id, name, username, imgUrl, personType }: Props) {
+function UserCard({id, name, username, imgUrl, personType, disableButtons, focused}: Props) {
     const router = useRouter();
 
     const isCommunity = personType === "Community";
 
     return (
-        <article className='user-card'>
+        <article className={`user-card ${disableButtons && 'cursor-pointer'} rounded-2xl transition ease-in-out ${focused && 'bg-dark-3'}`}>
             <div className='user-card_avatar'>
-                <div className='relative h-12 w-12'>
+                <div className={`relative ${disableButtons ? 'h-9 w-9' : 'h-12 w-12'}`}>
                     <Image
                         src={imgUrl}
                         alt='user_logo'
@@ -30,13 +33,14 @@ function UserCard({ id, name, username, imgUrl, personType }: Props) {
                     />
                 </div>
 
-                <div className='flex-1 text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:w-[180px]'>
+                <div
+                    className='flex-1 text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:w-[180px]'>
                     <h4 className='text-base-semibold text-light-1'>{name}</h4>
                     <p className='text-small-medium text-gray-1'>@{username}</p>
                 </div>
             </div>
 
-            <Button
+            {!disableButtons && <Button
                 className='user-card_btn'
                 onClick={() => {
                     if (isCommunity) {
@@ -47,7 +51,7 @@ function UserCard({ id, name, username, imgUrl, personType }: Props) {
                 }}
             >
                 View
-            </Button>
+            </Button>}
         </article>
     );
 }

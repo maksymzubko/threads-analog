@@ -1,5 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import {formatDateStringByOptions} from "@/lib/utils";
+import React from "react";
+import {CalendarIcon} from "@radix-ui/react-icons";
 
 interface Props {
     accountId: string;
@@ -9,6 +12,7 @@ interface Props {
     bio: string;
     username: string;
     type?: string;
+    registeredAt: string;
 }
 
 const ProfileHeader = ({
@@ -18,7 +22,8 @@ const ProfileHeader = ({
                            imgUrl,
                            username,
                            bio,
-                            type
+                            type,
+                            registeredAt,
                        }: Props) => {
     return (
         <div className='flex w-full flex-col justify-start'>
@@ -57,8 +62,13 @@ const ProfileHeader = ({
             </div>
 
             <p className='mt-6 max-w-lg text-base-regular text-light-2'>{bio}</p>
-
-            <div className='mt-12 h-0.5 w-full bg-dark-3' />
+            <div className="flex items-center pt-2">
+                <CalendarIcon className="mr-2 h-4 w-4 opacity-70"/>{" "}
+                <span className="text-xs text-muted-foreground text-gray-1 text-small-medium">
+                Joined {formatDateStringByOptions({year: 'numeric', month: 'long'}, registeredAt)}
+              </span>
+            </div>
+            <div className='mt-5 h-0.5 w-full bg-dark-3' />
         </div>
     );
 };

@@ -62,12 +62,13 @@ const ThreadsTab = async ({
 
                     return (
                         <ThreadCard
-                            key={thread._id}
-                            id={thread._id}
+                            key={thread._id.toString()}
+                            id={thread._id.toString()}
                             currentUserId={currentUserId}
                             parentId={thread.parentId}
                             content={thread.text}
                             author={authorObj}
+                            mentions={thread.mentioned}
                             community={
                                 accountType === "Community"
                                     ? { name: result.name, id: result.id, image: result.image }

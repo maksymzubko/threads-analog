@@ -12,7 +12,7 @@ import Image from "next/image";
 import {ChangeEvent, useState} from "react";
 import {isBase64Image} from "@/lib/utils";
 import {useUploadThing} from "@/lib/uploadthing";
-import {updateUser} from "@/lib/actions/user.actions";
+import {createUser, updateUser} from "@/lib/actions/user.actions";
 import {usePathname, useRouter} from "next/navigation";
 import {useUser} from "@clerk/nextjs";
 
@@ -80,8 +80,11 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                 values.profile_photo = imgResponse[0].fileUrl;
             }
         }
+        let result: any;
 
-        const result = await updateUser({
+        if(pathname === '/profile/edit')
+        {
+            result = await updateUser({
                 userId: user.id,
                 username: values.username,
                 name: values.name,
@@ -89,11 +92,24 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                 image: values.profile_photo,
                 path: pathname,
             });
+        }
+        else
+        {
+            result = await createUser({
+                userId: user.id,
+                username: values.username,
+                name: values.name,
+                bio: values.bio,
+                image: values.profile_photo,
+                path: pathname,
+            });
+        }
 
         if(result?.error){
             form.setError(result.error.name, result.error.error);
             return;
         }
+
         await clerkUser.user?.update({username: values.username.toLowerCase()});
 
         if(pathname === '/profile/edit') {
