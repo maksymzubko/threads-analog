@@ -25,7 +25,10 @@ const HoverUserCard = ({username, image, createdAt, bio, name}: {
                         <Image className={"rounded-full"} src={image} height={80} width={80} alt={'Photo image'}/>
                     </div>
                     <div className="space-y-1">
-                        <h4 className="text-sm font-semibold">@{username}</h4>
+                        <div className={"flex items-center gap-1 text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[100px]"}>
+                            <h4 className='inline-block text-base-semibold text-light-1'>{name}</h4>
+                            <p className='inline-block text-small-medium text-gray-1'>@{username}</p>
+                        </div>
                         <p className="text-sm">
                             {bio.length > 50 ? `${bio.substring(0, 50)}...` : bio}
                         </p>

@@ -11,4 +11,8 @@ export const ThreadValidation = zod.object({
 
 export const CommentValidation = zod.object({
     thread: zod.string().nonempty().min(1),
+    mentions: zod.object({
+        user: zod.string(),
+        range: zod.number().array()
+    }).array()
 })

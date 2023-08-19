@@ -3,7 +3,9 @@ import {currentUser} from "@clerk/nextjs";
 import {fetchUser} from "@/lib/actions/user.actions";
 import {redirect, usePathname} from "next/navigation";
 import {fetchThreadById} from "@/lib/actions/thread.actions";
-import Comment from "@/components/forms/Comment"
+const Comment = dynamic(() => import('@/components/forms/Comment'), {ssr: false})
+import {headers} from "next/headers";
+import dynamic from "next/dynamic";
 
 const Page = async ({params}: { params: { id: string } }) => {
     if (!params.id) return null;
@@ -15,6 +17,13 @@ const Page = async ({params}: { params: { id: string } }) => {
     if (!userInfo?.onboarded) redirect('/onboarding');
 
     const thread = await fetchThreadById(params.id);
+
+    const headersList = headers();
+    const userAgent = headersList.get('user-agent');
+
+    const isMobileView = !!userAgent!.match(
+        /Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
+    );
 
     return (
         <section className={"relative"}>
@@ -29,6 +38,7 @@ const Page = async ({params}: { params: { id: string } }) => {
                     community={thread.community}
                     createdAt={thread.createdAt}
                     comments={thread.children}
+                    likes={thread.likes}
                     mentions={thread.mentioned}
                     isMain
                 />
@@ -39,6 +49,7 @@ const Page = async ({params}: { params: { id: string } }) => {
                     threadId={thread.id}
                     currentUserImg={userInfo.image}
                     currentUserId={JSON.stringify(userInfo._id)}
+                    isMobile={isMobileView}
                 />
             </div>
 
@@ -56,6 +67,7 @@ const Page = async ({params}: { params: { id: string } }) => {
                                 createdAt={child.createdAt}
                                 mentions={child.mentioned}
                                 comments={child.children}
+                                likes={child.likes}
                                 isComment
                             />
                         )
