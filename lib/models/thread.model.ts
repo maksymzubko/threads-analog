@@ -18,6 +18,19 @@ const threadSchema = new mongoose.Schema({
     parentId: {
         type: String
     },
+    mentioned: [
+        {
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            range: [
+                {
+                    type: Number
+                }
+            ]
+        }
+    ],
     children: [
         {
             type: mongoose.Schema.Types.ObjectId,

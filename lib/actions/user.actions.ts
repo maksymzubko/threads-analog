@@ -6,7 +6,6 @@ import {revalidatePath} from "next/cache";
 import Thread from "@/lib/models/thread.model";
 import {FilterQuery, SortOrder} from "mongoose";
 import Community from "@/lib/models/community.model";
-import {$and} from "sift";
 
 interface UpdateUserParams {
     userId: string,
@@ -23,6 +22,34 @@ interface GetUsersParams {
     pageSize?: number;
     sortBy?: SortOrder;
     searchString?: string;
+    onlyNickname?: boolean;
+    isPlain?: boolean;
+}
+
+export async function createUser({userId, username, name, bio, image, path}: UpdateUserParams): Promise<any> {
+    connectToDB();
+
+    try {
+        const existedUser = await User.findOne({username: username.toLowerCase(), id: {$ne: userId}});
+        if (existedUser)
+            return {
+                error: {
+                    name: 'username',
+                    error: {type: 'custom', message: 'User with same name is already exist!'}
+                }
+            }
+
+        await User.create({
+            id: userId,
+            username: username.toLowerCase(),
+            name,
+            bio,
+            image,
+            onboarded: true
+        })
+    } catch (error: any) {
+        throw new Error(`Failed to create user: ${error.message}`)
+    }
 }
 
 export async function updateUser({userId, username, name, bio, image, path}: UpdateUserParams): Promise<any> {
@@ -30,8 +57,13 @@ export async function updateUser({userId, username, name, bio, image, path}: Upd
 
     try {
         const existedUser = await User.findOne({username: username.toLowerCase(), id: {$ne: userId}});
-        if(existedUser)
-            return {error: {name: 'username', error: {type: 'custom', message:'User with same name is already exist!'}}}
+        if (existedUser)
+            return {
+                error: {
+                    name: 'username',
+                    error: {type: 'custom', message: 'User with same name is already exist!'}
+                }
+            }
 
         await User.findOneAndUpdate(
             {id: userId},
@@ -41,23 +73,21 @@ export async function updateUser({userId, username, name, bio, image, path}: Upd
                 bio,
                 image,
                 onboarded: true
-            },
-            {upsert: true}
+            }
         );
 
         if (path === '/profile/edit') {
             revalidatePath(path);
         }
     } catch (error: any) {
-        throw new Error(`Failed to create/update user: ${error.message}`)
+        throw new Error(`Failed to update user: ${error.message}`)
     }
-
 }
 
 export async function fetchUser(userId: string) {
     try {
         connectToDB();
-        return await User.findOne({$or: [{id: userId}, {username: userId.replace("%40","")}]});
+        return await User.findOne({$or: [{id: userId}, {username: userId.replace("%40", "")}]});
     } catch (error: any) {
         throw new Error(`Failed to fetch user: ${error.message}`)
     }
@@ -72,35 +102,56 @@ export async function fetchUserPosts(userId: string) {
             .populate({
                 path: 'threads',
                 model: Thread,
-                populate: [{
-                    path: "community",
-                    model: Community,
-                }, {
-                    path: 'children', model: Thread,
-                    populate: {path: 'author', model: User, select: 'name username image id'}
-                }]
+                populate: [
+                    {
+                        path: "community",
+                        model: Community,
+                    }, {
+                        path: 'children', model: Thread,
+                        populate: {path: 'author', model: User, select: 'name username image id'}
+                    },
+                    {
+                        path: 'mentioned',
+                        populate: {
+                            path: 'user',
+                            model: User,
+                            select: "_id id image registeredAt bio name username"
+                        }
+                    }
+                ]
             })
     } catch (error: any) {
         throw new Error(`Failed to fetch posts: ${error.message}`)
     }
 }
 
-export async function fetchUsers({userId, searchString = "", pageNumber = 1, pageSize = 20, sortBy = "desc"}: GetUsersParams) {
+export async function fetchUsers({
+                                     userId,
+                                     searchString = "",
+                                     pageNumber = 1,
+                                     pageSize = 20,
+                                     sortBy = "desc",
+                                     onlyNickname = false,
+                                     isPlain = false
+                                 }: GetUsersParams) {
     try {
         connectToDB();
 
         const skipAmount = (pageNumber - 1) * pageSize;
 
-        const regex = new RegExp(searchString, 'i');
+        const regex = new RegExp(searchString?.replaceAll(/[.[.(.)\]]/gm, ''), 'i');
 
         const query: FilterQuery<typeof User> = {id: {$ne: userId}}
 
-        if(searchString?.trim() !== '') {
+        if (searchString?.trim() !== '' && !onlyNickname) {
             query.$or = [
                 {username: {$regex: regex}},
                 {name: {$regex: regex}}
             ]
-        }
+        } else
+            query.$or = [
+                {username: {$regex: regex}},
+            ]
 
         const sortOptions = {createdAt: sortBy};
 
@@ -112,7 +163,7 @@ export async function fetchUsers({userId, searchString = "", pageNumber = 1, pag
 
         const totalUsersCount = await User.countDocuments(query);
 
-        const users = await usersQuery.exec();
+        let users = await usersQuery.exec();
 
         const isNext = totalUsersCount > skipAmount + users.length;
 

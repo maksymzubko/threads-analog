@@ -10,13 +10,15 @@ interface CreateThreadProps {
     text: string,
     author: string,
     communityId: string | null,
-    path: string
+    path: string,
+    mentions: { user: string, range: number[] }[]
 }
 
 interface UpdateThreadProps {
     text: string;
     id: string;
     path: string;
+    mentions: { user: string, range: number[] }[];
 }
 
 interface CreateCommentProps {
@@ -26,22 +28,22 @@ interface CreateCommentProps {
     path: string
 }
 
-export async function createThread({text, author, communityId, path}: CreateThreadProps) {
+export async function createThread({text, author, communityId, mentions, path}: CreateThreadProps) {
     try {
         connectToDB();
 
         const communityIdObject = await Community.findOne(
-            { id: communityId },
-            { _id: 1 }
+            {id: communityId},
+            {_id: 1}
         );
 
-        const createdThread = await Thread.create({text, author, community: communityIdObject});
+        const createdThread = await Thread.create({text, author, community: communityIdObject, mentioned: mentions});
 
         await User.findByIdAndUpdate(author, {$push: {threads: createdThread._id}});
 
         if (communityIdObject) {
             await Community.findByIdAndUpdate(communityIdObject, {
-                $push: { threads: createdThread._id },
+                $push: {threads: createdThread._id},
             });
         }
 
@@ -51,14 +53,14 @@ export async function createThread({text, author, communityId, path}: CreateThre
     }
 }
 
-export async function updateThread({text, id, path}: UpdateThreadProps) {
+export async function updateThread({text, id, mentions, path}: UpdateThreadProps) {
     try {
         connectToDB();
 
         const thread = await Thread.findById(id);
-        if(!thread) throw new Error("Not found thread");
+        if (!thread) throw new Error("Not found thread");
 
-        await Thread.findByIdAndUpdate(thread._id, {text});
+        await Thread.findByIdAndUpdate(thread._id, {text, mentioned: mentions});
 
         revalidatePath(path);
     } catch (error: any) {
@@ -78,6 +80,14 @@ export async function fetchThreads(pageNumber = 1, pageSize = 20) {
             .skip(skipAmount)
             .limit(pageSize)
             .populate({path: 'author', model: User})
+            .populate({
+                path: 'mentioned',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id username image name bio registeredAt"
+                }
+            })
             .populate({
                 path: "community",
                 model: Community,
@@ -99,7 +109,7 @@ export async function fetchThreads(pageNumber = 1, pageSize = 20) {
 }
 
 async function fetchAllChildThreads(threadId: string): Promise<any[]> {
-    const childThreads = await Thread.find({ parentId: threadId });
+    const childThreads = await Thread.find({parentId: threadId});
 
     const descendantThreads = [];
     for (const childThread of childThreads) {
@@ -146,18 +156,18 @@ export async function deleteThread(id: string, path: string): Promise<void> {
         );
 
         // Recursively delete child threads and their descendants
-        await Thread.deleteMany({ _id: { $in: descendantThreadIds } });
+        await Thread.deleteMany({_id: {$in: descendantThreadIds}});
 
         // Update User model
         await User.updateMany(
-            { _id: { $in: Array.from(uniqueAuthorIds) } },
-            { $pull: { threads: { $in: descendantThreadIds } } }
+            {_id: {$in: Array.from(uniqueAuthorIds)}},
+            {$pull: {threads: {$in: descendantThreadIds}}}
         );
 
         // Update Community model
         await Community.updateMany(
-            { _id: { $in: Array.from(uniqueCommunityIds) } },
-            { $pull: { threads: { $in: descendantThreadIds } } }
+            {_id: {$in: Array.from(uniqueCommunityIds)}},
+            {$pull: {threads: {$in: descendantThreadIds}}}
         );
 
         revalidatePath(path);
@@ -194,7 +204,16 @@ export async function fetchThreadById(threadId: string) {
                             }]
                     }]
                 }
-            ]).exec();
+            ])
+            .populate({
+                path: 'mentioned',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id image registeredAt bio name username"
+                }
+            }).exec();
+
     } catch (error: any) {
         throw new Error(`Error fetching thread: ${error.message}`)
     }

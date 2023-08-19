@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
     name: {type: String, required: true},
     image: String,
     bio: String,
+    registeredAt: {
+        type: Date,
+        default: Date.now
+    },
     threads: [
         {
             type: mongoose.Schema.Types.ObjectId,

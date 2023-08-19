@@ -2,6 +2,7 @@ import {currentUser} from "@clerk/nextjs";
 import {redirect} from "next/navigation";
 import {fetchUser} from "@/lib/actions/user.actions";
 import PostThread from "@/components/forms/PostThread";
+import {headers} from "next/headers";
 
 async function Page() {
     const user = await currentUser();
@@ -11,11 +12,18 @@ async function Page() {
 
     if (!userInfo?.onboarded) redirect('/onboarding');
 
+    const headersList = headers();
+    const userAgent = headersList.get('user-agent');
+
+    const isMobileView = !!userAgent!.match(
+        /Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
+    );
+
     return (
         <>
             <h1 className={'head-text'}>Create Thread</h1>
 
-            <PostThread userId={userInfo?._id}/>
+            <PostThread userId={userInfo?._id.toString() ?? ""} isMobile={isMobileView}/>
         </>
     )
 }
