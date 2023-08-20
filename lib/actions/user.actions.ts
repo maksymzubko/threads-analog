@@ -6,7 +6,6 @@ import {revalidatePath} from "next/cache";
 import Thread from "@/lib/models/thread.model";
 import {FilterQuery, SortOrder} from "mongoose";
 import Community from "@/lib/models/community.model";
-import {$and} from "sift";
 
 interface UpdateUserParams {
     userId: string,
@@ -23,6 +22,34 @@ interface GetUsersParams {
     pageSize?: number;
     sortBy?: SortOrder;
     searchString?: string;
+    onlyNickname?: boolean;
+    isPlain?: boolean;
+}
+
+export async function createUser({userId, username, name, bio, image, path}: UpdateUserParams): Promise<any> {
+    connectToDB();
+
+    try {
+        const existedUser = await User.findOne({username: username.toLowerCase(), id: {$ne: userId}});
+        if (existedUser)
+            return {
+                error: {
+                    name: 'username',
+                    error: {type: 'custom', message: 'User with same name is already exist!'}
+                }
+            }
+
+        await User.create({
+            id: userId,
+            username: username.toLowerCase(),
+            name,
+            bio,
+            image,
+            onboarded: true
+        })
+    } catch (error: any) {
+        throw new Error(`Failed to create user: ${error.message}`)
+    }
 }
 
 export async function updateUser({userId, username, name, bio, image, path}: UpdateUserParams): Promise<any> {
@@ -30,8 +57,13 @@ export async function updateUser({userId, username, name, bio, image, path}: Upd
 
     try {
         const existedUser = await User.findOne({username: username.toLowerCase(), id: {$ne: userId}});
-        if(existedUser)
-            return {error: {name: 'username', error: {type: 'custom', message:'User with same name is already exist!'}}}
+        if (existedUser)
+            return {
+                error: {
+                    name: 'username',
+                    error: {type: 'custom', message: 'User with same name is already exist!'}
+                }
+            }
 
         await User.findOneAndUpdate(
             {id: userId},
@@ -41,23 +73,21 @@ export async function updateUser({userId, username, name, bio, image, path}: Upd
                 bio,
                 image,
                 onboarded: true
-            },
-            {upsert: true}
+            }
         );
 
         if (path === '/profile/edit') {
             revalidatePath(path);
         }
     } catch (error: any) {
-        throw new Error(`Failed to create/update user: ${error.message}`)
+        throw new Error(`Failed to update user: ${error.message}`)
     }
-
 }
 
 export async function fetchUser(userId: string) {
     try {
         connectToDB();
-        return await User.findOne({$or: [{id: userId}, {username: userId.replace("%40","")}]});
+        return await User.findOne({$or: [{id: userId}, {username: userId.replace("%40", "")}]});
     } catch (error: any) {
         throw new Error(`Failed to fetch user: ${error.message}`)
     }
@@ -72,35 +102,56 @@ export async function fetchUserPosts(userId: string) {
             .populate({
                 path: 'threads',
                 model: Thread,
-                populate: [{
-                    path: "community",
-                    model: Community,
-                }, {
-                    path: 'children', model: Thread,
-                    populate: {path: 'author', model: User, select: 'name username image id'}
-                }]
+                populate: [
+                    {
+                        path: "community",
+                        model: Community,
+                    }, {
+                        path: 'children', model: Thread,
+                        populate: {path: 'author', model: User, select: 'name username image id'}
+                    },
+                    {
+                        path: 'mentioned',
+                        populate: {
+                            path: 'user',
+                            model: User,
+                            select: "_id id image registeredAt bio name username"
+                        }
+                    }
+                ]
             })
     } catch (error: any) {
         throw new Error(`Failed to fetch posts: ${error.message}`)
     }
 }
 
-export async function fetchUsers({userId, searchString = "", pageNumber = 1, pageSize = 20, sortBy = "desc"}: GetUsersParams) {
+export async function fetchUsers({
+                                     userId,
+                                     searchString = "",
+                                     pageNumber = 1,
+                                     pageSize = 20,
+                                     sortBy = "desc",
+                                     onlyNickname = false,
+                                     isPlain = false
+                                 }: GetUsersParams) {
     try {
         connectToDB();
 
         const skipAmount = (pageNumber - 1) * pageSize;
 
-        const regex = new RegExp(searchString, 'i');
+        const regex = new RegExp(searchString?.replaceAll(/[.[.(.)\]]/gm, ''), 'i');
 
         const query: FilterQuery<typeof User> = {id: {$ne: userId}}
 
-        if(searchString?.trim() !== '') {
+        if (searchString?.trim() !== '' && !onlyNickname) {
             query.$or = [
                 {username: {$regex: regex}},
                 {name: {$regex: regex}}
             ]
-        }
+        } else
+            query.$or = [
+                {username: {$regex: regex}},
+            ]
 
         const sortOptions = {createdAt: sortBy};
 
@@ -112,7 +163,7 @@ export async function fetchUsers({userId, searchString = "", pageNumber = 1, pag
 
         const totalUsersCount = await User.countDocuments(query);
 
-        const users = await usersQuery.exec();
+        let users = await usersQuery.exec();
 
         const isNext = totalUsersCount > skipAmount + users.length;
 
@@ -122,7 +173,89 @@ export async function fetchUsers({userId, searchString = "", pageNumber = 1, pag
     }
 }
 
-export async function getActivity(userId: string) {
+const findReplies = async (childThreadIds: any[], userId: string) => {
+    const result: any[] = [];
+    const replies = await Thread.find({
+        _id: {$in: childThreadIds},
+        author: {$ne: userId}
+    }).populate({
+        path: 'author',
+        model: User,
+        select: 'name image id bio username _id'
+    }).populate({
+        path: 'mentioned',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image id bio username _id registeredAt'
+        }
+    })
+    replies.forEach(r=>{
+        result.push({...r?._doc, type: 'reply', date: new Date(r?._doc.createdAt).getTime()});
+    })
+    return result;
+}
+
+const findLikes = async (childThreadIds: any[], userId: string) => {
+    const result: any[] = [];
+    const threadsWithLikes = await Thread.find({
+        author: userId,
+        likes: {$exists: true, $elemMatch:{'user': {$ne: userId}}}
+    }).populate({
+        path: 'likes',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image bio id username _id'
+        }
+    }).populate({
+        path: 'author',
+        model: User,
+        select: 'name image bio id username _id'
+    }).populate({
+        path: 'mentioned',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image id bio username _id registeredAt'
+        }
+    })
+    threadsWithLikes.forEach(th=>{
+        th.likes.forEach((l:any)=>{
+            if(l.user._id.toString() !== userId.toString())
+                result.push({...th?._doc, user: l.user, type: 'like', date: new Date(l.createdAt).getTime()})
+        })
+    })
+
+    return result;
+}
+
+const findTags = async (childThreadIds: any[], userId: string) => {
+    const result: any[] = [];
+    const threadsWithTags = await Thread.find({
+        author: {$ne: userId},
+        mentioned: {$exists: true, $elemMatch:{user: userId}}
+    }).populate({
+        path: 'mentioned',
+        populate: {
+            path: 'user',
+            model: User,
+            select: 'name image id bio username _id registeredAt'
+        }
+    }).populate({
+        path: 'author',
+        model: User,
+        select: 'name image id bio username _id'
+    })
+    threadsWithTags.forEach(th=>{
+        th.mentioned.forEach((l:any)=>{
+            result.push({...th?._doc, user: l.user, type: 'tag', date: new Date(th?._doc.createdAt).getTime()})
+        })
+    })
+    return result;
+}
+
+export async function getActivity(userId: string, type: "reply" | "like" | "tag" | "all" = "all") {
     try {
         connectToDB();
 
@@ -132,16 +265,39 @@ export async function getActivity(userId: string) {
             return acc.concat(userThread.children);
         }, [])
 
-        const replies = await Thread.find({
-            _id: {$in: childThreadIds},
-            author: {$ne: userId}
-        }).populate({
-            path: 'author',
-            model: User,
-            select: 'name image id username _id'
-        })
+        const result: any[] = [];
 
-        return replies;
+        if(type === 'reply')
+            return (await findReplies(childThreadIds, userId)).sort((a,b)=>b.date-a.date);
+
+        if(type === 'like')
+            return (await findLikes(childThreadIds, userId)).sort((a,b)=>b.date-a.date);
+
+
+        if(type === 'tag')
+            return (await findTags(childThreadIds, userId)).sort((a,b)=>b.date-a.date);
+
+        if(type === 'all')
+        {
+            let replies = await findReplies(childThreadIds, userId);
+            const likes = await findLikes(childThreadIds, userId);
+            const tags = await findTags(childThreadIds, userId);
+            const fixedTags = tags.filter((item, idx) =>{
+                const index = replies.findIndex(r=>r.id===item.id);
+                if(index !== -1)
+                {
+                    replies[index].type = 'tag|reply';
+                    return false;
+                }
+                return true;
+            })
+
+            const sorted = [...replies, ...likes, ...fixedTags].sort((a,b)=>b.date-a.date);
+
+            result.push(...sorted)
+        }
+
+        return result;
     } catch (error: any) {
         throw new Error(`Failed to get user activity: ${error.message}`)
     }

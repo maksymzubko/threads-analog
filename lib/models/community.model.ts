@@ -15,6 +15,10 @@ const communitySchema = new mongoose.Schema({
         required: true,
     },
     image: String,
+    registeredAt: {
+        type: Date,
+        default: Date.now
+    },
     bio: String,
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,

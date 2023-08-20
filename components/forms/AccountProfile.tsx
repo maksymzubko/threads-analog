@@ -12,8 +12,9 @@ import Image from "next/image";
 import {ChangeEvent, useState} from "react";
 import {isBase64Image} from "@/lib/utils";
 import {useUploadThing} from "@/lib/uploadthing";
-import {updateUser} from "@/lib/actions/user.actions";
+import {createUser, updateUser} from "@/lib/actions/user.actions";
 import {usePathname, useRouter} from "next/navigation";
+import {useUser} from "@clerk/nextjs";
 
 interface Props {
     user: {
@@ -32,6 +33,8 @@ const AccountProfile = ({user, btnTitle}: Props) => {
     const {startUpload} = useUploadThing('media');
     const router = useRouter();
     const pathname = usePathname();
+
+    const clerkUser = useUser()
 
     const form = useForm(
         {
@@ -77,20 +80,37 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                 values.profile_photo = imgResponse[0].fileUrl;
             }
         }
+        let result: any;
 
-        const result = await updateUser({
+        if(pathname === '/profile/edit')
+        {
+            result = await updateUser({
                 userId: user.id,
                 username: values.username,
                 name: values.name,
                 bio: values.bio,
                 image: values.profile_photo,
-                path: pathname
+                path: pathname,
             });
+        }
+        else
+        {
+            result = await createUser({
+                userId: user.id,
+                username: values.username,
+                name: values.name,
+                bio: values.bio,
+                image: values.profile_photo,
+                path: pathname,
+            });
+        }
 
         if(result?.error){
             form.setError(result.error.name, result.error.error);
             return;
         }
+
+        await clerkUser.user?.update({username: values.username.toLowerCase()});
 
         if(pathname === '/profile/edit') {
             router.back();
@@ -107,15 +127,14 @@ const AccountProfile = ({user, btnTitle}: Props) => {
                     name="profile_photo"
                     render={({field}) => (
                         <FormItem className={"flex items-center gap-4"}>
-                            <FormLabel className={"account-form_image-label"}>
+                            <FormLabel className={"account-form_image-label relative"}>
                                 {field?.value ?
                                     <Image
                                         src={field.value}
                                         alt={"profile_photo"}
-                                        width={96}
-                                        height={96}
+                                        fill
                                         priority
-                                        className={"rounded-full object-contain"}
+                                        className={"rounded-full object-cover"}
                                     />
                                     :
                                     <Image

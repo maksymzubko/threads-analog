@@ -6,8 +6,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function isBase64Image(imageData: string) {
-    const base64Regex = /^data:image\/(png|jpe?g|gif|webp);base64,/;
+    const base64Regex = /^data:image\/(png|jpe?g|gif|webp|svg|svg\+xml);base64,/;
     return base64Regex.test(imageData);
+}
+
+export function splice(text: string, idx: number, rem: number, str: string) {
+    return text.slice(0, idx) + str + text.slice(idx + Math.abs(rem));
+}
+
+export function randomInteger(min: number, max: number) {
+    let rand = min + Math.random() * (max + 1 - min);
+    return Math.floor(rand);
 }
 
 export function formatDateForPost(_date: string) {
@@ -48,6 +57,10 @@ export function formatDateForPost(_date: string) {
     }
 }
 
+export function formatDateStringByOptions(options: Intl.DateTimeFormatOptions, dateString: string){
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, options);
+}
 
 export function formatDateString(dateString: string) {
     const options: Intl.DateTimeFormatOptions = {

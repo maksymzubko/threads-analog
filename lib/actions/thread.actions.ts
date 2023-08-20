@@ -10,38 +10,49 @@ interface CreateThreadProps {
     text: string,
     author: string,
     communityId: string | null,
-    path: string
+    path: string,
+    mentions: { user: string }[]
+    images: string[]
 }
 
 interface UpdateThreadProps {
     text: string;
     id: string;
     path: string;
+    mentions: { user: string }[];
+    images: string[];
 }
 
 interface CreateCommentProps {
     threadId: string,
     text: string,
     userId: string,
-    path: string
+    path: string,
+    mentions: any[]
+    images:string[];
 }
 
-export async function createThread({text, author, communityId, path}: CreateThreadProps) {
+interface LikeProps {
+    threadId: string,
+    userId: string,
+}
+
+export async function createThread({text, author, communityId, mentions, images, path}: CreateThreadProps) {
     try {
         connectToDB();
 
         const communityIdObject = await Community.findOne(
-            { id: communityId },
-            { _id: 1 }
+            {id: communityId},
+            {_id: 1}
         );
 
-        const createdThread = await Thread.create({text, author, community: communityIdObject});
+        const createdThread = await Thread.create({text, author, community: communityIdObject, mentioned: mentions, images});
 
         await User.findByIdAndUpdate(author, {$push: {threads: createdThread._id}});
 
         if (communityIdObject) {
             await Community.findByIdAndUpdate(communityIdObject, {
-                $push: { threads: createdThread._id },
+                $push: {threads: createdThread._id},
             });
         }
 
@@ -51,14 +62,14 @@ export async function createThread({text, author, communityId, path}: CreateThre
     }
 }
 
-export async function updateThread({text, id, path}: UpdateThreadProps) {
+export async function updateThread({text, id, mentions, path, images}: UpdateThreadProps) {
     try {
         connectToDB();
 
         const thread = await Thread.findById(id);
-        if(!thread) throw new Error("Not found thread");
+        if (!thread) throw new Error("Not found thread");
 
-        await Thread.findByIdAndUpdate(thread._id, {text});
+        await Thread.findByIdAndUpdate(thread._id, {images, text, mentioned: mentions});
 
         revalidatePath(path);
     } catch (error: any) {
@@ -78,6 +89,22 @@ export async function fetchThreads(pageNumber = 1, pageSize = 20) {
             .skip(skipAmount)
             .limit(pageSize)
             .populate({path: 'author', model: User})
+            .populate({
+                path: 'mentioned',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id username image name bio registeredAt"
+                }
+            })
+            .populate({
+                path: 'likes',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id"
+                }
+            })
             .populate({
                 path: "community",
                 model: Community,
@@ -99,7 +126,7 @@ export async function fetchThreads(pageNumber = 1, pageSize = 20) {
 }
 
 async function fetchAllChildThreads(threadId: string): Promise<any[]> {
-    const childThreads = await Thread.find({ parentId: threadId });
+    const childThreads = await Thread.find({parentId: threadId});
 
     const descendantThreads = [];
     for (const childThread of childThreads) {
@@ -146,18 +173,18 @@ export async function deleteThread(id: string, path: string): Promise<void> {
         );
 
         // Recursively delete child threads and their descendants
-        await Thread.deleteMany({ _id: { $in: descendantThreadIds } });
+        await Thread.deleteMany({_id: {$in: descendantThreadIds}});
 
         // Update User model
         await User.updateMany(
-            { _id: { $in: Array.from(uniqueAuthorIds) } },
-            { $pull: { threads: { $in: descendantThreadIds } } }
+            {_id: {$in: Array.from(uniqueAuthorIds)}},
+            {$pull: {threads: {$in: descendantThreadIds}}}
         );
 
         // Update Community model
         await Community.updateMany(
-            { _id: { $in: Array.from(uniqueCommunityIds) } },
-            { $pull: { threads: { $in: descendantThreadIds } } }
+            {_id: {$in: Array.from(uniqueCommunityIds)}},
+            {$pull: {threads: {$in: descendantThreadIds}}}
         );
 
         revalidatePath(path);
@@ -179,28 +206,102 @@ export async function fetchThreadById(threadId: string) {
                 select: "_id id name image",
             })
             .populate([
-                {path: 'author', model: User, select: "_id id name username parentId image"},
+                {
+                    path: 'likes',
+                    populate: {
+                        path: 'user',
+                        model: User,
+                        select: "_id id"
+                    }
+                },
+                {
+                    path: 'mentioned',
+                    populate: {
+                        path: 'user',
+                        model: User,
+                        select: "_id id image registeredAt bio name username"
+                    }
+                },
+                {path: 'author', model: User, select: "_id id name bio username parentId image"},
                 {
                     path: 'children',
                     model: Thread,
-                    populate: [{path: 'author', model: User, select: "_id id name username parentId image"}, {
-                        path: 'children',
-                        model: Thread,
-                        populate: [
-                            {path: 'author', model: User, select: "_id id name username parentId image"}, {
-                                path: 'children',
-                                model: Thread,
-                                populate: {path: 'author', model: User, select: "_id id name username parentId image"}
-                            }]
-                    }]
+                    populate: [
+                        {path: 'author', model: User, select: "_id id name bio username parentId image"},
+                        {
+                            path: 'likes',
+                            populate: {
+                                path: 'user',
+                                model: User,
+                                select: "_id id"
+                            }
+                        },
+                        {
+                            path: 'mentioned',
+                            populate: {
+                                path: 'user',
+                                model: User,
+                                select: "_id id image registeredAt bio name username"
+                            }
+                        },
+                        {
+                            path: 'children',
+                            model: Thread,
+                            populate: [
+                                {path: 'author', model: User, select: "_id id name bio username parentId image"},
+                                {
+                                    path: 'likes',
+                                    populate: {
+                                        path: 'user',
+                                        model: User,
+                                        select: "_id id"
+                                    }
+                                },
+                                {
+                                    path: 'mentioned',
+                                    populate: {
+                                        path: 'user',
+                                        model: User,
+                                        select: "_id id image registeredAt bio name username"
+                                    }
+                                },
+                                {
+                                    path: 'children',
+                                    model: Thread,
+                                    populate: {
+                                        path: 'author',
+                                        model: User,
+                                        select: "_id id name bio username parentId image"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 }
-            ]).exec();
+            ])
+            .populate({
+                path: 'mentioned',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id image registeredAt bio name username"
+                }
+            })
+            .populate({
+                path: 'likes',
+                populate: {
+                    path: 'user',
+                    model: User,
+                    select: "_id id"
+                }
+            }).exec();
+
     } catch (error: any) {
         throw new Error(`Error fetching thread: ${error.message}`)
     }
 }
 
-export async function addCommentToThread({threadId, text, userId, path}: CreateCommentProps) {
+export async function addCommentToThread({threadId, text, userId, path, mentions = [], images}: CreateCommentProps) {
     try {
         connectToDB();
 
@@ -210,7 +311,7 @@ export async function addCommentToThread({threadId, text, userId, path}: CreateC
             throw new Error("Thread not found!");
         }
 
-        const commentThread = new Thread({text, author: userId, parentId: threadId})
+        const commentThread = new Thread({images, text, author: userId, parentId: threadId, mentioned: mentions})
         const savedCommentThread = await commentThread.save();
 
         originalThread.children.push(savedCommentThread._id);
@@ -219,5 +320,41 @@ export async function addCommentToThread({threadId, text, userId, path}: CreateC
         revalidatePath(path);
     } catch (error: any) {
         throw new Error(`Error adding comment: ${error.message}`)
+    }
+}
+
+export async function likeFuncThread({threadId, userId}: LikeProps) {
+    try {
+        connectToDB();
+
+        const originalThread = await Thread.findById(threadId)
+            .populate({path: 'likes', populate: {path: 'user', model: User, select: '_id id'}});
+
+        if (!originalThread) {
+            throw new Error("Thread not found!");
+        }
+
+        const user = await User.findOne({id: userId});
+
+        if (!user) {
+            throw new Error("User not found!");
+        }
+
+        if (originalThread?.likes?.some((l: any) => l.user.id === userId)) {
+            originalThread.likes = originalThread.likes.filter((l: any) => l.user.id !== userId);
+        } else {
+            originalThread.likes.push({user: user._id, createdAt: new Date()});
+        }
+
+        await originalThread.save();
+
+        return (await Thread
+            .findById(threadId)
+            .select('_id likes')
+            .populate({path: 'likes', populate: {path: 'user', model: User, select: '_id id'}}))
+            ?.likes.map((l: any) => l?.user?.id);
+
+    } catch (error: any) {
+        throw new Error(`Error likeFunc thread: ${error.message}`)
     }
 }

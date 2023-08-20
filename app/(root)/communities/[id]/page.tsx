@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs";
 import { communityTabs } from "@/constants";
 
 import UserCard from "@/components/cards/UserCard";
-import ThreadsTab from "@/components/shared/ThreadsTab";
+import ThreadsTab from "@/components/shared/Threads/ThreadsTab";
 import ProfileHeader from "@/components/shared/ProfileHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -21,6 +21,7 @@ async function Page({ params }: { params: { id: string } }) {
             <ProfileHeader
                 accountId={communityDetails.createdBy.id}
                 authUserId={user.id}
+                registeredAt={communityDetails?.registeredAt}
                 name={communityDetails.name}
                 username={communityDetails.username}
                 imgUrl={communityDetails.image}

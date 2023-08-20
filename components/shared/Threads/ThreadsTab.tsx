@@ -14,6 +14,7 @@ interface Result {
     image: string;
     id: string;
     username?: string;
+    bio: string;
     threads: {
         _id: string;
         text: string;
@@ -23,6 +24,7 @@ interface Result {
             image: string;
             id: string;
             username: string;
+            bio: string;
         };
         community: {
             id: string;
@@ -55,24 +57,30 @@ const ThreadsTab = async ({
 
     return (
         <section className={"mt-9 flex flex-col gap-10"}>
-            {result.threads.map((thread: any) => {
+            {result
+                .threads
+                .sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime())
+                .map((thread: any) => {
                 const authorObj = accountType === 'User' ?
-                    {name: result.name, image: result.image, id: result.id, username: result.username} :
-                    {name: thread.author.name, image: thread.author.image, id: thread.author.id, username: thread.author.username};
+                    {name: result.name, image: result.image, id: result.id, username: result.username, bio: result.bio} :
+                    {name: thread.author.name, image: thread.author.image, id: thread.author.id, username: thread.author.username, bio: thread.author.bio};
 
                     return (
                         <ThreadCard
-                            key={thread._id}
-                            id={thread._id}
+                            key={thread._id.toString()}
+                            id={thread._id.toString()}
                             currentUserId={currentUserId}
                             parentId={thread.parentId}
                             content={thread.text}
                             author={authorObj}
+                            mentions={thread.mentioned}
+                            likes={thread.likes}
                             community={
                                 accountType === "Community"
                                     ? { name: result.name, id: result.id, image: result.image }
                                     : thread.community
                             }
+                            images={thread.images}
                             createdAt={thread.createdAt}
                             comments={thread.children}
                         />

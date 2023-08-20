@@ -17,7 +17,7 @@ const Share = ({url, text}:{url: string, text: string}) => {
             }}
             onClick={() => console.log("shared successfully!")}
         >
-            <Image src={"/assets/share.svg"} alt={"share"} width={24} height={24}
+            <Image priority src={"/assets/share.svg"} alt={"share"} fill
                    className={"cursor-pointer object-contain"}/>
         </RWebShare>
     );
