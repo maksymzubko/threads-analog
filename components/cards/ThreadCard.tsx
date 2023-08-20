@@ -6,6 +6,7 @@ import React, {useState} from "react";
 import EditCardForm from "@/components/forms/EditCardForm";
 import HoverUserCard from "@/components/cards/HoverUserCard";
 import ThreadActions from "@/components/shared/ThreadActions";
+import ImageBlock from "@/components/shared/ImageBlock";
 
 interface Params {
     id: string,
@@ -23,6 +24,7 @@ interface Params {
     mentions?: any;
     likes: any[];
     isEdited?: boolean;
+    images: string[];
 }
 
 const ThreadCard = ({
@@ -39,6 +41,7 @@ const ThreadCard = ({
                         isChild,
                         likes,
                         index,
+                        images,
                         mentions,
                         isEdited,
                     }: Params) => {
@@ -54,16 +57,17 @@ const ThreadCard = ({
                         const data = /@\[([\S]+)\]\(([\S]+)\)/g.exec(v);
                         const name = data?.at(1) ?? "";
                         const id = data?.at(2) ?? "";
-                        const user = mentions.find((m:any)=>m.user._id.toString() === id)?.user;
+                        const user = mentions.find((m: any) => m.user._id.toString() === id)?.user;
 
-                        if(!user) return <span>{v}</span>
+                        if (!user) return <span>{v}</span>
 
-                        return <HoverUserCard username={name} image={user?.image} createdAt={user?.registeredAt} bio={user?.bio} name={user?.name}>
+                        return <HoverUserCard username={name} image={user?.image} createdAt={user?.registeredAt}
+                                              bio={user?.bio} name={user?.name}>
                             <Link href={`/profile/@${name}`} className={"hover:underline text-primary-500"}>
                                 @{name}
                             </Link>
                         </HoverUserCard>
-                    } else if(v !== "")
+                    } else if (v !== "")
                         return <span>{v}</span>
                 })}
             </>)
@@ -99,7 +103,7 @@ const ThreadCard = ({
                                 >
                                     <Link href={`/profile/@${author.username}`}
                                           className={"w-fit flex gap-2 text-gray-1 items-center"}>
-                                        <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{ author.name}</h4>
+                                        <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{author.name}</h4>
                                         <h5 className={"hover:underline"}>@{author.username} ·</h5>
                                     </Link>
                                 </HoverUserCard>
@@ -119,7 +123,11 @@ const ThreadCard = ({
 
                             <p className={"mt-2 text-small-regular text-light-2"}>{normalizeContent()}</p>
 
-                            <ThreadActions currentUserId={currentUserId} likes={likes.map(l=>l.user.id)} id={id} content={content} commentsLength={comments.length} isComment={isComment} isMain={isMain}/>
+                            <ImageBlock images={images}/>
+
+                            <ThreadActions currentUserId={currentUserId} likes={likes.map(l => l.user.id)} id={id}
+                                           content={content} commentsLength={comments.length} isComment={isComment}
+                                           isMain={isMain}/>
                         </div>
                     </div>
                 </div>
@@ -178,6 +186,7 @@ const ThreadCard = ({
                     mentions={child.mentioned}
                     isComment
                     isChild
+                    images={child.images}
                     likes={child.likes}
                     index={_index + 1}
                 />

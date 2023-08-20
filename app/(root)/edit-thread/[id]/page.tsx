@@ -33,7 +33,9 @@ async function Page({params}:{params:{id: string}}) {
                 userId={userInfo?._id}
                 threadId={thread.id}
                 text={thread.text}
+                currentUserImg={userInfo?.image}
                 mentioned={thread.mentioned.map((m:any)=>new Object({user:m.user?._id.toString()}))}
+                images={thread.images}
                 isMobile={isMobileView}/>
         </>
     )

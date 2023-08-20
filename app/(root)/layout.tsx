@@ -6,6 +6,9 @@ import RightSidebar from "@/components/shared/RightSidebar";
 import BottomBar from "@/components/shared/BottomBar";
 import {ThemeProvider} from "@/components/theme-provider";
 import dynamic from "next/dynamic";
+import {useRouter} from "next/navigation";
+import {router} from "next/client";
+import {headers} from "next/headers";
 
 const LeftSidebar = dynamic(() => import('@/components/shared/LeftSidebar'), {ssr: false});
 
@@ -26,7 +29,7 @@ export default function RootLayout({children}: {
         <main className={"flex flex-row"}>
             <LeftSidebar/>
             <section className={"main-container"}>
-                <div className={"w-full max-w-4xl"}>
+                <div className={`w-full max-w-4xl`}>
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                         {children}
                     </ThemeProvider>

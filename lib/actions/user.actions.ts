@@ -200,7 +200,7 @@ const findLikes = async (childThreadIds: any[], userId: string) => {
     const result: any[] = [];
     const threadsWithLikes = await Thread.find({
         author: userId,
-        likes: {$exists: true, $ne: [], $elemMatch:{user: {$ne: userId}}}
+        likes: {$exists: true, $elemMatch:{user: {$ne: userId}}}
     }).populate({
         path: 'likes',
         populate: {
@@ -222,10 +222,11 @@ const findLikes = async (childThreadIds: any[], userId: string) => {
     })
     threadsWithLikes.map(th=>{
         th.likes.map((l:any)=>{
-            console.log(th?._doc.text)
+            console.log(l.user, userId)
             result.push({...th?._doc, user: l.user, type: 'like', date: new Date(l.createdAt).getTime()})
         })
     })
+
     return result;
 }
 

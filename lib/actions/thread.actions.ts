@@ -12,6 +12,7 @@ interface CreateThreadProps {
     communityId: string | null,
     path: string,
     mentions: { user: string }[]
+    images: string[]
 }
 
 interface UpdateThreadProps {
@@ -19,6 +20,7 @@ interface UpdateThreadProps {
     id: string;
     path: string;
     mentions: { user: string }[];
+    images: string[];
 }
 
 interface CreateCommentProps {
@@ -27,6 +29,7 @@ interface CreateCommentProps {
     userId: string,
     path: string,
     mentions: any[]
+    images:string[];
 }
 
 interface LikeProps {
@@ -34,7 +37,7 @@ interface LikeProps {
     userId: string,
 }
 
-export async function createThread({text, author, communityId, mentions, path}: CreateThreadProps) {
+export async function createThread({text, author, communityId, mentions, images, path}: CreateThreadProps) {
     try {
         connectToDB();
 
@@ -43,7 +46,7 @@ export async function createThread({text, author, communityId, mentions, path}: 
             {_id: 1}
         );
 
-        const createdThread = await Thread.create({text, author, community: communityIdObject, mentioned: mentions});
+        const createdThread = await Thread.create({text, author, community: communityIdObject, mentioned: mentions, images});
 
         await User.findByIdAndUpdate(author, {$push: {threads: createdThread._id}});
 
@@ -59,14 +62,14 @@ export async function createThread({text, author, communityId, mentions, path}: 
     }
 }
 
-export async function updateThread({text, id, mentions, path}: UpdateThreadProps) {
+export async function updateThread({text, id, mentions, path, images}: UpdateThreadProps) {
     try {
         connectToDB();
 
         const thread = await Thread.findById(id);
         if (!thread) throw new Error("Not found thread");
 
-        await Thread.findByIdAndUpdate(thread._id, {text, mentioned: mentions});
+        await Thread.findByIdAndUpdate(thread._id, {images, text, mentioned: mentions});
 
         revalidatePath(path);
     } catch (error: any) {
@@ -219,12 +222,12 @@ export async function fetchThreadById(threadId: string) {
                         select: "_id id image registeredAt bio name username"
                     }
                 },
-                {path: 'author', model: User, select: "_id id name username parentId image"},
+                {path: 'author', model: User, select: "_id id name bio username parentId image"},
                 {
                     path: 'children',
                     model: Thread,
                     populate: [
-                        {path: 'author', model: User, select: "_id id name username parentId image"},
+                        {path: 'author', model: User, select: "_id id name bio username parentId image"},
                         {
                             path: 'likes',
                             populate: {
@@ -245,7 +248,7 @@ export async function fetchThreadById(threadId: string) {
                             path: 'children',
                             model: Thread,
                             populate: [
-                                {path: 'author', model: User, select: "_id id name username parentId image"},
+                                {path: 'author', model: User, select: "_id id name bio username parentId image"},
                                 {
                                     path: 'likes',
                                     populate: {
@@ -268,7 +271,7 @@ export async function fetchThreadById(threadId: string) {
                                     populate: {
                                         path: 'author',
                                         model: User,
-                                        select: "_id id name username parentId image"
+                                        select: "_id id name bio username parentId image"
                                     }
                                 }
                             ]
@@ -298,7 +301,7 @@ export async function fetchThreadById(threadId: string) {
     }
 }
 
-export async function addCommentToThread({threadId, text, userId, path, mentions = []}: CreateCommentProps) {
+export async function addCommentToThread({threadId, text, userId, path, mentions = [], images}: CreateCommentProps) {
     try {
         connectToDB();
 
@@ -308,7 +311,7 @@ export async function addCommentToThread({threadId, text, userId, path, mentions
             throw new Error("Thread not found!");
         }
 
-        const commentThread = new Thread({text, author: userId, parentId: threadId, mentioned: mentions})
+        const commentThread = new Thread({images, text, author: userId, parentId: threadId, mentioned: mentions})
         const savedCommentThread = await commentThread.save();
 
         originalThread.children.push(savedCommentThread._id);
