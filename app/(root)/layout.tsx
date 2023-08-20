@@ -5,12 +5,9 @@ import TopBar from "@/components/shared/TopBar";
 import RightSidebar from "@/components/shared/RightSidebar";
 import BottomBar from "@/components/shared/BottomBar";
 import {ThemeProvider} from "@/components/theme-provider";
-import dynamic from "next/dynamic";
-import {useRouter} from "next/navigation";
-import {router} from "next/client";
-import {headers} from "next/headers";
-
-const LeftSidebar = dynamic(() => import('@/components/shared/LeftSidebar'), {ssr: false});
+import LeftSidebar from "@/components/shared/LeftSidebar";
+import {Suspense} from "react";
+import LeftSidebarSkeleton from "@/components/skeletons/LeftSidebarSkeleton";
 
 const inter = Inter({subsets: ['latin']})
 
@@ -27,7 +24,9 @@ export default function RootLayout({children}: {
         <body className={`${inter.className}`}>
         <TopBar/>
         <main className={"flex flex-row"}>
+            <Suspense fallback={<LeftSidebarSkeleton/>}>
             <LeftSidebar/>
+            </Suspense>
             <section className={"main-container"}>
                 <div className={`w-full max-w-4xl`}>
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

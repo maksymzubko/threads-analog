@@ -37,7 +37,7 @@ const PostThreadActions = ({disabled, isMobile, onSmileClick, handleImage, files
         }
     }
     const computeStyle = () => {
-        const height = window?.innerHeight ?? 0;
+        const height = typeof window !== "undefined" ? window?.innerHeight : 0;
         const fromBottom = block?.current?.getBoundingClientRect().bottom;
         const containerHeight = isMobile ? 250 : 320;
 
@@ -49,7 +49,7 @@ const PostThreadActions = ({disabled, isMobile, onSmileClick, handleImage, files
     return (
         <div className={"flex items-center gap-2"}>
             <div ref={block} className={"cursor-pointer relative"}>
-                <Image onClick={handleStateEmoji} src={'/assets/emoji.png'}
+                <Image priority onClick={handleStateEmoji} src={'/assets/emoji.png'}
                        className={"invert transition ease-in-out hover:grayscale-[1px]"} alt={'Emoji'}
                        width={32} height={32}/>
                 <div style={{...computeStyle()}}

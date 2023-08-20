@@ -2,9 +2,9 @@ import {currentUser} from "@clerk/nextjs";
 import {redirect} from "next/navigation";
 import {fetchUser} from "@/lib/actions/user.actions";
 import {headers} from "next/headers";
-import dynamic from "next/dynamic";
-
-const PostThread = dynamic(()=>import('@/components/forms/PostThread'), {ssr: false})
+import {Suspense} from "react";
+import PostThread from "@/components/forms/PostThread";
+import PostThreadSkeleton from "@/components/skeletons/PostThreadSkeleton";
 
 async function Page() {
     const user = await currentUser();
@@ -25,7 +25,9 @@ async function Page() {
         <div>
             <h1 className={'head-text'}>Create Thread</h1>
 
-            <PostThread userId={userInfo?._id.toString() ?? ""} currentUserImg={userInfo?.image} isMobile={isMobileView}/>
+            <Suspense fallback={<PostThreadSkeleton/>}>
+                <PostThread userId={userInfo?._id.toString() ?? ""} currentUserImg={userInfo?.image} isMobile={isMobileView}/>
+            </Suspense>
         </div>
     )
 }

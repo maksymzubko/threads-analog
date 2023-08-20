@@ -27,7 +27,7 @@ interface Params {
     images: string[];
 }
 
-const ThreadCard = ({
+const ThreadCard = async ({
                         id,
                         currentUserId,
                         parentId,
@@ -82,7 +82,7 @@ const ThreadCard = ({
                     <div className={"flex w-full flex-1 flex-row gap-4"}>
                         <div className={"flex flex-col items-center"}>
                             <Link href={`/profile/@${author.username}`} className={"relative h-11 w-11"}>
-                                <Image src={author.image} alt={"Profile image"} fill
+                                <Image priority src={author.image} alt={"Profile image"} fill
                                        className={"cursor-pointer rounded-full object-cover"}/>
                             </Link>
 
@@ -147,6 +147,7 @@ const ThreadCard = ({
                             {comments.slice(0, 2).map((comment, index) => (
                                 <div className={`${index !== 0 && "-ml-3"} relative w-[24px] h-[24px]`}>
                                     <Image
+                                        priority
                                         key={index}
                                         src={comment.author.image}
                                         alt={`user_${index}`}
@@ -170,7 +171,7 @@ const ThreadCard = ({
                     <p className='text-subtle-medium text-gray-1 mt-5 flex items-center'>
                         {formatDateString(createdAt)} {isEdited && ` (edited)`}
                         {community && ` - ${community?.name} Community`}
-                        {community && <Image src={community.image} alt={community.name} width={14} height={14}
+                        {community && <Image priority src={community.image} alt={community.name} width={14} height={14}
                                              className={"ml-1 h-[14px] hidden md:block rounded-full object-cover"}/>}
                     </p>
                 )}

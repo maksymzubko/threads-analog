@@ -78,7 +78,7 @@ const ActivityCard = ({
                                 <Link href={`/profile/@${type === 'like' ? user.username : author.username}`}
                                       className={"relative h-11 w-11"}>
                                     <Image src={type === 'like' ? user.image : author.image} alt={"Profile image"} fill
-                                           className={"cursor-pointer rounded-full"}/>
+                                           className={"cursor-pointer rounded-full object-cover"}/>
                                 </Link>
                             </div>
                             <div className={`flex w-full flex-col`}>

@@ -94,7 +94,7 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
                 }
             }}
                            placeholder={"Whats going on?!"}
-                           className={`flex gap-4 relative bg-none border-none [&_textarea]:rounded-2xl [&_textarea]:outline-none [&_textarea]:!text-[20px]`}
+                           className={`flex gap-4 relative bg-none border-none [&_textarea]:outline-none [&_textarea]:!text-[20px]`}
                            {...field}
                            onChange={onChange}
                            rows={isComment ? 10 : 15}
