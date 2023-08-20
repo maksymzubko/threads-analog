@@ -12,10 +12,10 @@ export default async function Home(
         searchParams: { [key: string]: string | undefined };
     }) {
     const user = await currentUser();
-    if (!user) return null;
+    // if (!user) return null;
 
-    const userInfo = await fetchUser(user.id);
-    if (!userInfo?.onboarded) redirect("/onboarding");
+    const userInfo = user ? await fetchUser(user.id) : null;
+    if (!userInfo?.onboarded && user) redirect("/onboarding");
 
     const result = await fetchThreads(
         searchParams.page ? +searchParams.page : 1,
@@ -33,10 +33,10 @@ export default async function Home(
         <>
             <h1 className={"head-text text-left"}>Home</h1>
 
-            <section>
+            {userInfo && <section>
                 <PostThread userId={userInfo?._id.toString() ?? ""} currentUserImg={userInfo?.image}
                             isMobile={isMobileView} onHome/>
-            </section>
+            </section>}
 
             <section className={"mt-9 flex flex-col gap-10"}>
                 {result.threads.length === 0 ? <p className={"no-result"}>No threads found!</p> :
