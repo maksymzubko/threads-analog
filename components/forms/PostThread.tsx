@@ -167,7 +167,7 @@ function PostThread({userId, threadId, text, isMobile, mentioned, currentUserImg
     return (
         <div className={"flex items-start mt-10 gap-4 border-dark-3 p-5 rounded-2xl border-[1px]"}>
             <div className={"w-[48px] h-[48px] relative"}>
-                <Image src={currentUserImg ?? ""} alt={"Profile image"} fill
+                <Image priority src={currentUserImg ?? ""} alt={"Profile image"} fill
                        className={"rounded-full object-cover"}/>
             </div>
             <Form {...form}>

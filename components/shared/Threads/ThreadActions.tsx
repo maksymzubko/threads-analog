@@ -35,7 +35,7 @@ const ThreadActions = ({isComment, isMain, id, likes, content, commentsLength, c
                     className={"flex items-center text-gray-1 text-base-regular"}
                     onClick={likeFunc}>
                     <div className={"flex items-center justify-center h-[36px] sm:h-[36px] w-[32px] sm:w-[36px] relative transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                        <Image src={`/assets/heart-${liked ? 'filled' : 'gray'}.svg`} alt={"heart"} fill
+                        <Image priority src={`/assets/heart-${liked ? 'filled' : 'gray'}.svg`} alt={"heart"} fill
                                className={"cursor-pointer object-contain"}/>
                     </div>
                     {_likes.length > 0 && <p>{_likes.length}</p>}
@@ -44,7 +44,7 @@ const ThreadActions = ({isComment, isMain, id, likes, content, commentsLength, c
                       className={'flex items-center text-gray-1 text-base-regular'}>
                     <div
                         className={"flex items-center justify-center h-[36px] sm:h-[36px] w-[32px] sm:w-[36px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full relative"}>
-                        <Image src={"/assets/reply.svg"} alt={"reply"} fill
+                        <Image priority src={"/assets/reply.svg"} alt={"reply"} fill
                                className={"cursor-pointer object-contain"}/>
                     </div>
                     {(isComment || isMain) && commentsLength > 0 && <p>{commentsLength}</p>}
