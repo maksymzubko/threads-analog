@@ -43,6 +43,7 @@ function PostThread({userId, threadId, text, isMobile, mentioned, currentUserImg
     }))
 
     const input = useRef<any>();
+    const block = useRef<any>();
     const {startUpload} = useUploadThing('media');
 
     const {organization} = useOrganization();
@@ -131,11 +132,14 @@ function PostThread({userId, threadId, text, isMobile, mentioned, currentUserImg
         }
     }
 
-    const computeStype = () => {
-        // window?.innerHeight < 900 ? {bottom: 50} : {height: '50px'}
-        // if(window?.innerHeight < 900 || ref?.current?.)
-        console.log(input?.current)
-        return {}
+    const computeStyle = () => {
+        const height = window?.innerHeight ?? 0;
+        const fromBottom = block?.current?.getBoundingClientRect().bottom;
+        const containerHeight = isMobile ? 250 : 320;
+
+        if(height - fromBottom - 120 < containerHeight)
+            return {bottom: 50, left: isMobile ? '-300%' : 0}
+        else return {top: 50, left: isMobile ? '-300%' : 0}
     }
 
     const deleteImage = (id: string) => {
@@ -191,11 +195,11 @@ function PostThread({userId, threadId, text, isMobile, mentioned, currentUserImg
 
                     <div className={"flex justify-between"}>
                         <div className={"flex items-center gap-2"}>
-                            <div className={"cursor-pointer relative"}>
+                            <div ref={block} className={"cursor-pointer relative"}>
                                 <Image onClick={handleStateEmoji} src={'/assets/emoji.png'}
                                        className={"invert transition ease-in-out hover:grayscale-[1px]"} alt={'Emoji'}
                                        width={32} height={32}/>
-                                <div style={{...computeStype()}}
+                                <div style={{...computeStyle()}}
                                      className={`${showEmoji ? 'flex' : 'hidden'} absolute z-50`}>
                                     <EmojiPicker height={isMobile ? 250 : 320} searchDisabled={isMobile}
                                                  onEmojiClick={onSmileClick} previewConfig={{showPreview: false}}

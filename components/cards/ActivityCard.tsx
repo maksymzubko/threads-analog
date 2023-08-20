@@ -69,8 +69,8 @@ const ActivityCard = ({
     return (
         <>
             <article
-                className={`flex w-full flex-col 'bg-dark-2 p-7 rounded-xl bg-dark-3`}>
-                <Link href={`/thread/${parentId}/#${id}`}>
+                className={`flex w-full flex-col 'bg-dark-2 p-5 sm:p-7 rounded-xl bg-dark-3`}>
+                <Link href={`/thread/${parentId ? `${parentId}/#${id}` : id}`}>
                     <div
                         className={`flex items-start justify-between`}>
                         <div className={"flex w-full flex-1 flex-row gap-4"}>
@@ -91,16 +91,16 @@ const ActivityCard = ({
                                         name={type === 'like' ? user.name : author.name}
                                     >
                                         <Link href={`/profile/@${type === 'like' ? user.username : author.username}`}
-                                              className={"w-fit flex gap-2 text-gray-1 items-center"}>
+                                              className={"flex gap-2 text-gray-1 items-center text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[60px] sm:[&>*]:max-w-[100px] md:[&>*]:max-w-[120px]"}>
                                             <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{type === 'like' ? user.name : author.name}</h4>
-                                            <h5 className={"hover:underline"}>@{type === 'like' ? user.username : author.username} ·</h5>
+                                            <h5 className={"hover:underline"}>@{type === 'like' ? user.username : author.username}</h5>
                                         </Link>
                                     </HoverUserCard>
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <h5>
-                                                    {formatDateForPost(createdAt)}
+                                                    {" · "}{formatDateForPost(createdAt)}
                                                 </h5>
                                             </TooltipTrigger>
                                             <TooltipContent className={"bg-dark-2 border-none text-light-2"}>

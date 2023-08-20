@@ -102,16 +102,16 @@ const ThreadCard = ({
                                     name={author.name}
                                 >
                                     <Link href={`/profile/@${author.username}`}
-                                          className={"w-fit flex gap-2 text-gray-1 items-center"}>
+                                          className={"flex gap-2 text-gray-1 items-center text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[60px] sm:[&>*]:max-w-[100px] md:[&>*]:max-w-[120px]"}>
                                         <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{author.name}</h4>
-                                        <h5 className={"hover:underline"}>@{author.username} ·</h5>
+                                        <h5 className={"hover:underline"}>@{author.username}</h5>
                                     </Link>
                                 </HoverUserCard>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <h5>
-                                                {formatDateForPost(createdAt)}
+                                            <h5 className={`${isComment ? '' : 'hidden sm:flex'}`}>
+                                                {" · "}{formatDateForPost(createdAt)}
                                             </h5>
                                         </TooltipTrigger>
                                         <TooltipContent className={"bg-dark-2 border-none text-light-2"}>

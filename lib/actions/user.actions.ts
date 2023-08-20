@@ -190,7 +190,7 @@ const findReplies = async (childThreadIds: any[], userId: string) => {
             select: 'name image id bio username _id registeredAt'
         }
     })
-    replies.map(r=>{
+    replies.forEach(r=>{
         result.push({...r?._doc, type: 'reply', date: new Date(r?._doc.createdAt).getTime()});
     })
     return result;
@@ -198,9 +198,10 @@ const findReplies = async (childThreadIds: any[], userId: string) => {
 
 const findLikes = async (childThreadIds: any[], userId: string) => {
     const result: any[] = [];
+    console.log(userId)
     const threadsWithLikes = await Thread.find({
         author: userId,
-        likes: {$exists: true, $elemMatch:{user: {$ne: userId}}}
+        likes: {$exists: true, $elemMatch:{'user': {$ne: userId}}}
     }).populate({
         path: 'likes',
         populate: {
@@ -220,10 +221,10 @@ const findLikes = async (childThreadIds: any[], userId: string) => {
             select: 'name image id bio username _id registeredAt'
         }
     })
-    threadsWithLikes.map(th=>{
-        th.likes.map((l:any)=>{
-            console.log(l.user, userId)
-            result.push({...th?._doc, user: l.user, type: 'like', date: new Date(l.createdAt).getTime()})
+    threadsWithLikes.forEach(th=>{
+        th.likes.forEach((l:any)=>{
+            if(l.user._id.toString() !== userId.toString())
+                result.push({...th?._doc, user: l.user, type: 'like', date: new Date(l.createdAt).getTime()})
         })
     })
 
@@ -247,8 +248,8 @@ const findTags = async (childThreadIds: any[], userId: string) => {
         model: User,
         select: 'name image id bio username _id'
     })
-    threadsWithTags.map(th=>{
-        th.mentioned.map((l:any)=>{
+    threadsWithTags.forEach(th=>{
+        th.mentioned.forEach((l:any)=>{
             result.push({...th?._doc, user: l.user, type: 'tag', date: new Date(th?._doc.createdAt).getTime()})
         })
     })
