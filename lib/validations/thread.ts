@@ -1,7 +1,7 @@
 import * as zod from 'zod';
 
 export const ThreadValidation = zod.object({
-    thread: zod.string().min(1),
+    thread: zod.string().nonempty().regex(/^(?!\s*$).+/).min(1),
     accountId: zod.string(),
     mentions: zod.object({
         user: zod.string(),

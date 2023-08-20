@@ -91,7 +91,7 @@ const ActivityCard = ({
                                         name={type === 'like' ? user.name : author.name}
                                     >
                                         <Link href={`/profile/@${type === 'like' ? user.username : author.username}`}
-                                              className={"flex gap-2 text-gray-1 items-center text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[60px] sm:[&>*]:max-w-[100px] md:[&>*]:max-w-[120px]"}>
+                                              className={"flex gap-2 text-gray-1 items-center text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[100px] xs:[&>*]:max-w-[60px] sm:[&>*]:max-w-[100px] md:[&>*]:max-w-[120px]"}>
                                             <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{type === 'like' ? user.name : author.name}</h4>
                                             <h5 className={"hover:underline"}>@{type === 'like' ? user.username : author.username}</h5>
                                         </Link>
@@ -99,7 +99,7 @@ const ActivityCard = ({
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <h5>
+                                                <h5 className={"hidden xs:flex"}>
                                                     {" · "}{formatDateForPost(createdAt)}
                                                 </h5>
                                             </TooltipTrigger>
@@ -120,6 +120,7 @@ const ActivityCard = ({
                             </div>
                         </div>
                     </div>
+                    <div className={"text-gray-1 text-small-medium xs:hidden"}>{formatDateForPost(createdAt)}</div>
                 </Link>
             </article>
         </>

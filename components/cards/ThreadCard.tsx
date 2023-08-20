@@ -5,7 +5,7 @@ import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/compon
 import React, {useState} from "react";
 import EditCardForm from "@/components/forms/EditCardForm";
 import HoverUserCard from "@/components/cards/HoverUserCard";
-import ThreadActions from "@/components/shared/ThreadActions";
+import ThreadActions from "@/components/shared/Threads/ThreadActions";
 import ImageBlock from "@/components/shared/ImageBlock";
 
 interface Params {
@@ -83,7 +83,7 @@ const ThreadCard = ({
                         <div className={"flex flex-col items-center"}>
                             <Link href={`/profile/@${author.username}`} className={"relative h-11 w-11"}>
                                 <Image src={author.image} alt={"Profile image"} fill
-                                       className={"cursor-pointer rounded-full"}/>
+                                       className={"cursor-pointer rounded-full object-cover"}/>
                             </Link>
 
                             {(comments.length > 0 || isMain) && <div className={"thread-card_bar"}/>}
@@ -102,7 +102,7 @@ const ThreadCard = ({
                                     name={author.name}
                                 >
                                     <Link href={`/profile/@${author.username}`}
-                                          className={"flex gap-2 text-gray-1 items-center text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[60px] sm:[&>*]:max-w-[100px] md:[&>*]:max-w-[120px]"}>
+                                          className={`flex gap-2 text-gray-1 items-center text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[60px] ${isComment ? '' : 'xs:[&>*]:max-w-[100px]'} sm:[&>*]:max-w-[100px] md:[&>*]:max-w-[120px]`}>
                                         <h4 className={"cursor-pointer text-base-semibold text-light-1 hover:underline"}>{author.name}</h4>
                                         <h5 className={"hover:underline"}>@{author.username}</h5>
                                     </Link>
@@ -143,16 +143,19 @@ const ThreadCard = ({
                 {/*Count of replies (only on main page)*/}
                 {!isComment && !isMain && comments.length > 0 && (
                     <div className='ml-1 mt-3 flex items-center gap-2'>
-                        {comments.slice(0, 2).map((comment, index) => (
-                            <Image
-                                key={index}
-                                src={comment.author.image}
-                                alt={`user_${index}`}
-                                width={24}
-                                height={24}
-                                className={`${index !== 0 && "-ml-5"} rounded-full object-cover`}
-                            />
-                        ))}
+                        <div className={"flex items-center"}>
+                            {comments.slice(0, 2).map((comment, index) => (
+                                <div className={`${index !== 0 && "-ml-3"} relative w-[24px] h-[24px]`}>
+                                    <Image
+                                        key={index}
+                                        src={comment.author.image}
+                                        alt={`user_${index}`}
+                                        fill
+                                        className={`rounded-full object-cover`}
+                                    />
+                                </div>
+                            ))}
+                        </div>
 
                         <Link href={`/thread/${id}`}>
                             <p className='mt-1 text-subtle-medium text-gray-1'>

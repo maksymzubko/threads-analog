@@ -3,9 +3,10 @@ import {currentUser} from "@clerk/nextjs";
 import {fetchUser} from "@/lib/actions/user.actions";
 import {redirect, usePathname} from "next/navigation";
 import {fetchThreadById} from "@/lib/actions/thread.actions";
-const Comment = dynamic(() => import('@/components/forms/Comment'), {ssr: false})
 import {headers} from "next/headers";
 import dynamic from "next/dynamic";
+
+const PostThread = dynamic(() => import('@/components/forms/PostThread'), {ssr: false})
 
 const Page = async ({params}: { params: { id: string } }) => {
     if (!params.id) return null;
@@ -46,11 +47,12 @@ const Page = async ({params}: { params: { id: string } }) => {
             </div>
 
             <div className={"mt-7"}>
-                <Comment
+                <PostThread
+                    userId={userInfo._id}
+                    isMobile={isMobileView}
+                    isComment
                     threadId={thread.id}
                     currentUserImg={userInfo.image}
-                    currentUserId={JSON.stringify(userInfo._id)}
-                    isMobile={isMobileView}
                 />
             </div>
 
