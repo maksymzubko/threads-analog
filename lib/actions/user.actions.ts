@@ -198,7 +198,6 @@ const findReplies = async (childThreadIds: any[], userId: string) => {
 
 const findLikes = async (childThreadIds: any[], userId: string) => {
     const result: any[] = [];
-    console.log(userId)
     const threadsWithLikes = await Thread.find({
         author: userId,
         likes: {$exists: true, $elemMatch:{'user': {$ne: userId}}}
