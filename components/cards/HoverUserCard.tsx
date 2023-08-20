@@ -19,9 +19,9 @@ const HoverUserCard = ({username, image, createdAt, bio, name, children}: {
                 {children}
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
-                <div className="flex justify-between space-x-4">
-                    <div className={"h-[80px] w-[80px]"}>
-                        <Image className={"rounded-full"} src={image} height={80} width={80} alt={'Photo image'}/>
+                <div className="flex justify-start space-x-4">
+                    <div className={"flex !h-[80px] !w-[80px] min-w-[80px] max-w-[80px] relative"}>
+                        <Image className={"rounded-full object-cover"} src={image} fill alt={'Photo image'}/>
                     </div>
                     <div className="space-y-1">
                         <div className={"flex items-center gap-1 text-ellipsis [&>*]:whitespace-nowrap [&>*]:overflow-hidden [&>*]:overflow-ellipsis [&>*]:max-w-[100px]"}>

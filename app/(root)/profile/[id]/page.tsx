@@ -5,7 +5,7 @@ import ProfileHeader from "@/components/shared/ProfileHeader";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {profileTabs} from "@/constants";
 import Image from "next/image";
-import ThreadsTab from "@/components/shared/ThreadsTab";
+import ThreadsTab from "@/components/shared/Threads/ThreadsTab";
 import ActivityTab from "@/components/shared/ActivityTab";
 
 const Page = async ({params}: { params: { id: string } }) => {
