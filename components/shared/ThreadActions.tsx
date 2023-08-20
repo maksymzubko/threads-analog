@@ -34,8 +34,8 @@ const ThreadActions = ({isComment, isMain, id, likes, content, commentsLength, c
                 <div
                     className={"flex items-center text-gray-1 text-base-regular"}
                     onClick={likeFunc}>
-                    <div className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                        <Image src={`/assets/heart-${liked ? 'filled' : 'gray'}.svg`} alt={"heart"} width={24} height={24}
+                    <div className={"flex items-center justify-center h-[36px] sm:h-[36px] w-[32px] sm:w-[36px] relative transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
+                        <Image src={`/assets/heart-${liked ? 'filled' : 'gray'}.svg`} alt={"heart"} fill
                                className={"cursor-pointer object-contain"}/>
                     </div>
                     {_likes.length > 0 && <p>{_likes.length}</p>}
@@ -43,15 +43,15 @@ const ThreadActions = ({isComment, isMain, id, likes, content, commentsLength, c
                 <Link href={`/thread/${id}`}
                       className={'flex items-center text-gray-1 text-base-regular'}>
                     <div
-                        className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
-                        <Image src={"/assets/reply.svg"} alt={"reply"} width={24} height={24}
+                        className={"flex items-center justify-center h-[36px] sm:h-[36px] w-[32px] sm:w-[36px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full relative"}>
+                        <Image src={"/assets/reply.svg"} alt={"reply"} fill
                                className={"cursor-pointer object-contain"}/>
                     </div>
                     {(isComment || isMain) && commentsLength > 0 && <p>{commentsLength}</p>}
                 </Link>
 
                 <div
-                    className={"flex items-center justify-center h-[30px] w-[30px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full"}>
+                    className={"flex items-center justify-center h-[36px] sm:h-[36px] w-[32px] sm:w-[36px] transition ease-in-out hover:bg-[#5c5c7b33] rounded-full relative [&>*]:text-dark-3"}>
                     <Share url={`${process.env.HOST}/thread/${id}`} text={content}/>
                 </div>
 

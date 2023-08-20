@@ -111,10 +111,11 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile, images = []
     const computeStyle = () => {
         const height = window?.innerHeight ?? 0;
         const fromBottom = block?.current?.getBoundingClientRect().bottom;
+        const containerHeight = isMobile ? 250 : 320;
 
-        if(height < 900 ||  height - fromBottom < 150)
-            return {bottom: 50}
-        else return {top: 50}
+        if(height - fromBottom - 120 < containerHeight)
+            return {bottom: 50, left: isMobile ? '-300%' : 0}
+        else return {top: 50, left: isMobile ? '-300%' : 0}
     }
 
     const deleteImage = (id: string) => {

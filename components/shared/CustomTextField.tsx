@@ -81,7 +81,7 @@ const CustomTextField = ({search, userId, disabled, field, form, isComment}: Tag
     return (
         <>
             <MentionsInput disabled={disabled} style={{
-                "&multiLine": {control: {outline: "none", fontSize: "16px", minHeight: isComment ? '150px' : '300px', border: 'none'}},
+                "&multiLine": {control: {outline: "none", fontSize: "16px", maxHeight: isComment ? '300px' : 'auto', minHeight: isComment ? '150px' : '300px', border: 'none'}},
                 suggestions: {
                     list: {
                         background: isComment && 'none',
