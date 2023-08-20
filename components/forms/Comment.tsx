@@ -12,20 +12,32 @@ import {addCommentToThread, createThread} from "@/lib/actions/thread.actions";
 import {Input} from "@/components/ui/input";
 import Image from "next/image";
 import CustomTextField from "@/components/shared/CustomTextField";
-import {useState} from "react";
-import {randomInteger} from "@/lib/utils";
+import {ChangeEvent, useRef, useState} from "react";
+import {isBase64Image, randomInteger} from "@/lib/utils";
 import EmojiPicker, {EmojiClickData, Theme} from "emoji-picker-react";
+import {v4 as uuidv4} from "uuid";
+import {useUploadThing} from "@/lib/uploadthing";
+import {ImageIcon} from "@radix-ui/react-icons";
 
 interface Params {
     threadId: string;
     currentUserImg: string;
     currentUserId: string;
     isMobile: boolean;
+    images?: string[]
 }
 
-const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) => {
+const Comment = ({threadId, currentUserImg, currentUserId, isMobile, images = []}: Params) => {
     const pathname = usePathname();
     const [showEmoji, setShowEmoji] = useState(false)
+
+    const [files, setFiles] = useState<{id: string, data: string, file: File | null}[]>(images.map(i=> {
+        return {id: uuidv4(), data: i, file: null}
+    }))
+
+    const input = useRef<any>();
+    const block = useRef<any>();
+    const {startUpload} = useUploadThing('media');
 
     const form = useForm(
         {
@@ -38,15 +50,32 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
 
     const onSubmit = async (values: zod.infer<typeof CommentValidation>) => {
         setShowEmoji(false);
+        const images: string[] = [];
+
+        const needUpload = files.filter(f=>isBase64Image(f.data) && f.file);
+        const dontNeedUpload = files.filter(f=>f.data !== "" && !f.file)
+
+        images.push(...dontNeedUpload.map(f=>f.data))
+
+        if (needUpload.length > 0) {
+            const imgResponse = await startUpload(needUpload.map(f=>f.file ?? new File([], "")));
+
+            if (imgResponse) {
+                images.push(...imgResponse.map(img=>img.fileUrl));
+            }
+        }
+
         await addCommentToThread({
             text: values.thread,
             threadId,
             userId: JSON.parse(currentUserId),
             path: pathname,
-            mentions: values.mentions
+            mentions: values.mentions,
+            images
         });
 
         form.reset();
+        setFiles([])
     }
 
     const onSmileClick = (emoji: EmojiClickData) => {
@@ -57,6 +86,39 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
         if (!form.formState.isSubmitting || form.formState.isSubmitSuccessful) {
             setShowEmoji(!showEmoji)
         }
+    }
+
+    const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
+        e.preventDefault();
+
+        const fileReader = new FileReader();
+
+        if (e.target.files && e.target.files.length) {
+            const file = e.target.files[0];
+            const id = uuidv4()
+
+            if (!file.type.includes('image')) return;
+
+            fileReader.onload = async (event) => {
+                const imageDataUrl = event.target?.result?.toString() || "";
+                setFiles(prev=>[...prev, {id, data: imageDataUrl, file}]);
+            }
+
+            fileReader.readAsDataURL(file);
+        }
+    }
+
+    const computeStyle = () => {
+        const height = window?.innerHeight ?? 0;
+        const fromBottom = block?.current?.getBoundingClientRect().bottom;
+
+        if(height < 900 ||  height - fromBottom < 150)
+            return {bottom: 50}
+        else return {top: 50}
+    }
+
+    const deleteImage = (id: string) => {
+        setFiles(prev=>prev.filter(f=>f.id!==id));
     }
 
     return (
@@ -87,14 +149,46 @@ const Comment = ({threadId, currentUserImg, currentUserId, isMobile}: Params) =>
 
                     <div className={"border-[1px] border-dark-3"}/>
 
+                    {files.length > 0 && <>
+                        <div className={"flex flex-wrap items-center gap-2"}>
+                            {files.map(f =>
+                                <div key={f.id} className={'item relative cursor-pointer bg-none transition ease-in-out group'} onClick={e=>deleteImage(f.id)}>
+                                    <div className={"absolute w-full transition ease-in-out h-full z-50"}>
+                                        <span className={"group-hover:scale-100 translate-x-[-50%] translate-y-[-50%] rotate-[45deg] h-1/2 w-[4px] top-1/2 left-1/2 bg-white transition absolute scale-0"}></span>
+                                        <span className={"group-hover:scale-100 translate-x-[-50%] translate-y-[-50%] rotate-[-45deg] h-1/2 w-[4px] top-1/2 left-1/2 bg-white transition absolute scale-0"}></span>
+                                    </div>
+                                    <Image className={"group-hover:grayscale transition ease-in-out group-hover:opacity-30"} src={f.data} alt={'img'} width={60} height={60}/>
+                                </div>
+                            )}
+                        </div>
+                        <div className={"border-[1px] border-dark-3"}/>
+                    </>}
+
                     <div className={"flex w-full justify-between"}>
-                        <div className={"cursor-pointer relative"}>
-                            <Image onClick={handleStateEmoji} src={'/assets/emoji.png'} className={"invert"} alt={'Emoji'} width={32} height={32}/>
-                            <div className={`${showEmoji ? 'flex' : 'hidden'} absolute z-50 top-[50px]`}>
-                                <EmojiPicker height={isMobile ? 250 : 350} lazyLoadEmojis={true}
-                                             searchDisabled={isMobile}
-                                             onEmojiClick={onSmileClick} previewConfig={{showPreview: false}}
-                                             theme={Theme.DARK}/>
+                        <div className={"flex items-center gap-2"}>
+                            <div ref={block} className={"cursor-pointer relative"}>
+                                <Image onClick={handleStateEmoji} src={'/assets/emoji.png'}
+                                       className={"invert transition ease-in-out hover:grayscale-[1px]"} alt={'Emoji'}
+                                       width={32} height={32}/>
+                                <div style={{...computeStyle()}}
+                                     className={`${showEmoji ? 'flex' : 'hidden'} absolute z-50`}>
+                                    <EmojiPicker height={isMobile ? 250 : 320} searchDisabled={isMobile}
+                                                 onEmojiClick={onSmileClick} previewConfig={{showPreview: false}}
+                                                 theme={Theme.DARK}/>
+                                </div>
+                            </div>
+                            <div className={"cursor-pointer"}>
+                                <ImageIcon className={`h-[28px] w-[28px] transition ease-in-out ${files.length >= 1 && 'opacity-40 cursor-auto'} hover:opacity-40`}
+                                           color={"#b7b7b7"} onClick={e => input?.current?.click()}/>
+                                <Input
+                                    disabled={files.length >= 1}
+                                    ref={input}
+                                    type={"file"}
+                                    accept={"image/*"}
+                                    placeholder={"Upload a photo"}
+                                    className={"hidden"}
+                                    onChange={e => handleImage(e)}
+                                />
                             </div>
                         </div>
 
