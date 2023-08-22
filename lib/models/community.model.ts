@@ -5,7 +5,7 @@ const communitySchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    username: {
+    slug: {
         type: String,
         unique: true,
         required: true,
@@ -19,7 +19,7 @@ const communitySchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    bio: String,
+    description: String,
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
