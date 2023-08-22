@@ -10,8 +10,6 @@ interface Props {
 
 const ThreadCardSkeleton = ({isComment, isChild, index, comments}:Props) => {
     const hasChild = comments?.at(0) ?? null;
-
-    log('mounted')
     return (
         <>
             <article className={`flex animate-pulse w-full flex-col ${isComment ? `px-0 xs:px-7` : 'bg-dark-2 p-7 rounded-xl'}`}>

@@ -6,19 +6,19 @@ import { Button } from "@/components/ui/button";
 interface Props {
     id: string;
     name: string;
-    username: string;
+    slug: string;
     imgUrl: string;
-    bio: string;
+    description: string;
     members: {
         image: string;
     }[];
 }
 
-function CommunityCard({ id, name, username, imgUrl, bio, members }: Props) {
+function CommunityCard({ id, name, slug, imgUrl, description, members }: Props) {
     return (
         <article className='community-card'>
             <div className='flex flex-wrap items-center gap-3'>
-                <Link href={`/communities/${id}`} className='relative h-12 w-12'>
+                <Link href={`/communities/${slug}`} className='relative h-12 w-12'>
                     <Image
                         src={imgUrl}
                         alt='community_logo'
@@ -28,17 +28,17 @@ function CommunityCard({ id, name, username, imgUrl, bio, members }: Props) {
                 </Link>
 
                 <div>
-                    <Link href={`/communities/${id}`}>
+                    <Link href={`/communities/${slug}`}>
                         <h4 className='text-base-semibold text-light-1'>{name}</h4>
                     </Link>
-                    <p className='text-small-medium text-gray-1'>@{username}</p>
+                    <p className='text-small-medium text-gray-1'>@{slug}</p>
                 </div>
             </div>
 
-            <p className='mt-4 text-subtle-medium text-gray-1'>{bio}</p>
+            <p className='mt-4 text-subtle-medium text-gray-1'>{description}</p>
 
             <div className='mt-5 flex flex-wrap items-center justify-between gap-3'>
-                <Link href={`/communities/${id}`}>
+                <Link href={`/communities/${slug}`}>
                     <Button size='sm' className='community-card_btn'>
                         View
                     </Button>

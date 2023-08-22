@@ -1,16 +1,18 @@
-import { currentUser } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
+import {currentUser, useOrganizationList, CreateOrganization} from "@clerk/nextjs";
+import {redirect} from "next/navigation";
 
 import Searchbar from "@/components/shared/Searchbar";
 import Pagination from "@/components/shared/Pagination";
 import CommunityCard from "@/components/cards/CommunitCard";
 
-import { fetchUser } from "@/lib/actions/user.actions";
-import { fetchCommunities } from "@/lib/actions/community.actions";
+import {fetchUser} from "@/lib/actions/user.actions";
+import {fetchCommunities} from "@/lib/actions/community.actions";
+import CreateCommunity from "@/components/shared/CreateCommunity";
+import {clerkClient} from "@clerk/clerk-sdk-node";
 
 async function Page({
-        searchParams,
-    }: {
+                        searchParams,
+                    }: {
     searchParams: { [key: string]: string | undefined };
 }) {
     const user = await currentUser();
@@ -27,10 +29,15 @@ async function Page({
 
     return (
         <>
-            <h1 className='head-text'>Communities</h1>
+            <div className={"flex items-center gap-3 justify-between"}>
+                <h1 className='head-text'>Communities</h1>
+                <CreateCommunity userId={user.id}/>
+            </div>
 
-            <div className='mt-5'>
-                <Searchbar routeType='communities' />
+            <div className='mt-5 flex items-end flex-col justify-center gap-3'>
+                <div className={"w-full"}>
+                    <Searchbar routeType='communities'/>
+                </div>
             </div>
 
             <section className='mt-9 flex flex-wrap gap-4'>
@@ -43,9 +50,9 @@ async function Page({
                                 key={community.id}
                                 id={community.id}
                                 name={community.name}
-                                username={community.username}
+                                slug={community.slug}
                                 imgUrl={community.image}
-                                bio={community.bio}
+                                description={community.description}
                                 members={community.members}
                             />
                         ))}
