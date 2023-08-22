@@ -18,6 +18,24 @@
 
 Is an application similar to Thread, Twitter. Written in JS (nextjs, react).
 
+## TODO ✅⏳
+- Ability for users to create threads ✅
+- Ability to reply to posts ✅
+- Ability to like posts ✅
+- Ability to edit profile ✅
+- Ability to view activity ✅
+- Ability for users to search for other users, groups ✅
+- Opportunity to mention in a thread ✅
+- Ability to add a photo to a post (now only 1, but in future its will be at least 3, i guess) ✅
+- Ability to create community (group) ✅
+- Ability to edit community ⏳
+- Ability to manage community (accept users, remove users, change role) ⏳
+- Ability to create post in community ⏳ 
+- Ability to change visibility community (public, private) ⏳
+- Ability to create post in community like admin ⏳
+- Optimize loading images and content ⏳
+- Project review and clenup ⏳
+
 ## Installation
 
 Firstly you need start API, configurate .env file, then:
