@@ -24,9 +24,9 @@ async function Page({ params }: { params: { id: string } }) {
                 authUserId={user.id}
                 registeredAt={communityDetails?.registeredAt}
                 name={communityDetails.name}
-                username={communityDetails.username}
+                username={communityDetails.slug}
                 imgUrl={communityDetails.image}
-                bio={communityDetails.bio}
+                bio={communityDetails.description}
                 type='Community'
             />
 

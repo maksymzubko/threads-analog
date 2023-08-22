@@ -27,7 +27,7 @@ function CommunityCard({ id, name, slug, imgUrl, description, members }: Props) 
                     />
                 </Link>
 
-                <div>
+                <div className={"[&_*]:whitespace-nowrap [&_*]:overflow-hidden [&_*]:overflow-ellipsis [&_*]:max-w-[160px] md:[&_*]:max-w-[220px]"}>
                     <Link href={`/communities/${slug}`}>
                         <h4 className='text-base-semibold text-light-1'>{name}</h4>
                     </Link>
@@ -35,7 +35,7 @@ function CommunityCard({ id, name, slug, imgUrl, description, members }: Props) 
                 </div>
             </div>
 
-            <p className='mt-4 text-subtle-medium text-gray-1'>{description}</p>
+            <p className='mt-4 text-subtle-medium text-gray-1 whitespace-nowrap overflow-hidden overflow-ellipsis max-w-[200px] sm:max-w-[330px]'>{description}</p>
 
             <div className='mt-5 flex flex-wrap items-center justify-between gap-3'>
                 <Link href={`/communities/${slug}`}>
@@ -47,16 +47,17 @@ function CommunityCard({ id, name, slug, imgUrl, description, members }: Props) 
                 {members.length > 0 && (
                     <div className='flex items-center'>
                         {members.map((member, index) => (
-                            <Image
-                                key={index}
-                                src={member.image}
-                                alt={`user_${index}`}
-                                width={28}
-                                height={28}
-                                className={`${
-                                    index !== 0 && "-ml-2"
-                                } rounded-full object-cover`}
-                            />
+                            <div className={"relative h-[28px] w-[28px]"}>
+                                <Image
+                                    key={index}
+                                    src={member.image}
+                                    alt={`user_${index}`}
+                                    fill
+                                    className={`${
+                                        index !== 0 && "-ml-2"
+                                    } rounded-full object-cover`}
+                                />
+                            </div>
                         ))}
                         {members.length > 3 && (
                             <p className='ml-1 text-subtle-medium text-gray-1'>

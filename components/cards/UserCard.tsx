@@ -44,7 +44,7 @@ function UserCard({id, name, username, imgUrl, personType, disableButtons, focus
                 className='user-card_btn'
                 onClick={() => {
                     if (isCommunity) {
-                        router.push(`/communities/${id}`);
+                        router.push(`/communities/${username}`);
                     } else {
                         router.push(`/profile/@${username}`);
                     }
