@@ -76,13 +76,7 @@ export async function createCommunity(
             createdBy: user._id, // Use the mongoose ID of the user
         });
 
-        const createdCommunity = await newCommunity.save();
-
-        // Update User model
-        user.communities.push(createdCommunity._id);
-        await user.save();
-
-        return createdCommunity;
+        return await newCommunity.save();
     } catch (error) {
         // Handle any errors
         console.error("Error creating community:", error);
@@ -93,7 +87,6 @@ export async function createCommunity(
 export async function fetchCommunityDetails(id: string) {
     try {
         connectToDB();
-
         const communityDetails = await Community.findOne({slug:id}).populate([
             "createdBy",
             {

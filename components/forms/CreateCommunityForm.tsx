@@ -71,8 +71,15 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
             form.setValue('slug', convertToPattern(event.target.value.toLowerCase(), event.target.name === 'slug'));
     }
 
+    const onCancel = () => {
+        form.reset();
+        setFiles([]);
+        onClose();
+    }
+
     const onSubmit = async (values: zod.infer<typeof CommunityValidation>) => {
-        form.setValue('slug', convertToPattern(form.getValues().slug))
+        const fixedSlug = convertToPattern(form.getValues().slug);
+        form.setValue('slug', fixedSlug)
 
         const formData = new FormData();
         formData.set('uploader_user_id', userId);
@@ -81,7 +88,7 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
         const {
             organization,
             errors
-        } = await newCommunity(userId, values.description, values.name, values.slug, formData);
+        } = await newCommunity(userId, values.description, values.name, fixedSlug, formData);
 
         if (errors.length) {
             errors.forEach((err: any) => {
@@ -96,7 +103,7 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
     }
 
     return (
-        <section className={"p-8 w-[90%] md:w-[600px] bg-dark-3 rounded-2xl max-h-[70%] md:max-h-[90%] overflow-auto"}>
+        <section className={"p-8 w-[90%] md:w-[600px] bg-dark-3 rounded-2xl max-h-[100%] overflow-auto"}>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} onChange={onChange} autoComplete={"off"}
                       className="flex flex-col justify-start gap-10">
@@ -203,7 +210,7 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
                         <Button type={"button"}
                                 disabled={form.formState.isSubmitting}
                                 className={"bg-primary-500 w-[40%]"}
-                                onClick={onClose}>
+                                onClick={onCancel}>
                             Cancel
                         </Button>
                         <Button type="submit"
