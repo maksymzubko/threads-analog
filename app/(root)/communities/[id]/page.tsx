@@ -1,21 +1,29 @@
 import Image from "next/image";
-import { currentUser } from "@clerk/nextjs";
+import {currentUser} from "@clerk/nextjs";
 
-import { communityTabs } from "@/constants";
+import {communityTabs} from "@/constants";
 
 import UserCard from "@/components/cards/UserCard";
 import ThreadsTab from "@/components/shared/Threads/ThreadsTab";
 import ProfileHeader from "@/components/shared/ProfileHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 
-import { fetchCommunityDetails } from "@/lib/actions/community.actions";
+import {fetchCommunityDetails} from "@/lib/actions/community.actions";
 
-async function Page({ params }: { params: { id: string } }) {
+async function Page({params}: { params: { id: string } }) {
     const user = await currentUser();
     if (!user) return null;
 
     const communityDetails = await fetchCommunityDetails(params.id);
-    if(!communityDetails) return null;
+    if (!communityDetails) return null;
+
+    const getUserRole = () => {
+        const isCreator = communityDetails.createdBy.id === user.id;
+        if (isCreator) return "admin";
+        const isMember = communityDetails.members?.find((u: any) => u.id === user.id);
+        if (isMember) return isMember.role;
+        return null;
+    }
 
     return (
         <section>
@@ -27,6 +35,15 @@ async function Page({ params }: { params: { id: string } }) {
                 username={communityDetails.slug}
                 imgUrl={communityDetails.image}
                 bio={communityDetails.description}
+                role={getUserRole()}
+                community={{
+                    id: communityDetails.id,
+                    name: communityDetails.name,
+                    slug: communityDetails.slug,
+                    description: communityDetails.description,
+                    image: communityDetails.image,
+                    variant: communityDetails.variant
+                }}
                 type='Community'
             />
 

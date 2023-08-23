@@ -7,8 +7,10 @@ import CommunityCard from "@/components/cards/CommunitCard";
 
 import {fetchUser} from "@/lib/actions/user.actions";
 import {fetchCommunities} from "@/lib/actions/community.actions";
-import CreateCommunity from "@/components/shared/CreateCommunity";
+import CreateCommunity from "@/components/shared/CommunityAction";
 import {clerkClient} from "@clerk/clerk-sdk-node";
+import CommunityAction from "@/components/shared/CommunityAction";
+import {Button} from "@/components/ui/button";
 
 async function Page({
                         searchParams,
@@ -31,7 +33,9 @@ async function Page({
         <>
             <div className={"flex items-center gap-3 justify-between"}>
                 <h1 className='head-text'>Communities</h1>
-                <CreateCommunity userId={user.id}/>
+                <CommunityAction userId={user.id}>
+                    <Button className={"block overflow-hidden max-w-[100px] xs:max-w-full text-ellipsis"}>Create my own</Button>
+                </CommunityAction>
             </div>
 
             <div className='mt-5 flex items-end flex-col justify-center gap-3'>
