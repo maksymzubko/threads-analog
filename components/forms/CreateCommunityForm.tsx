@@ -12,10 +12,14 @@ import {ChangeEvent, useState} from "react";
 import {CommunityValidation} from "@/lib/validations/community";
 import {newCommunity} from "@/lib/actions/community.actions";
 import {useRouter} from "next/navigation";
+import {useToast} from "@/components/ui/use-toast";
+import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
+import {Label} from "@/components/ui/label";
 
 const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () => void; userId: string; }) => {
     const [files, setFiles] = useState<File[]>([])
     const router = useRouter();
+    const {toast} = useToast();
 
     const form = useForm(
         {
@@ -25,6 +29,7 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
                 name: '',
                 description: '',
                 image: '',
+                variant: 'public',
             }
         });
 
@@ -55,8 +60,7 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
             .replace(pattern, '')
             .replace(/\s+/g, '-');
 
-        if(isSlug)
-        {
+        if (isSlug) {
             const noConsecutiveHyphens = cleanedString
                 .replace(/-{2,}/g, '-');
             return noConsecutiveHyphens
@@ -67,7 +71,7 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
     }
 
     const onChange = (event: any) => {
-        if(event.target.name === 'name' || event.target.name === 'slug')
+        if (event.target.name === 'name' || event.target.name === 'slug')
             form.setValue('slug', convertToPattern(event.target.value.toLowerCase(), event.target.name === 'slug'));
     }
 
@@ -83,12 +87,12 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
 
         const formData = new FormData();
         formData.set('uploader_user_id', userId);
-        formData.set('file', files[0], "file");
+        if (files[0]) formData.set('file', files[0], "file");
 
         const {
             organization,
             errors
-        } = await newCommunity(userId, values.description, values.name, fixedSlug, formData);
+        } = await newCommunity(userId, values.description, values.variant, values.name, fixedSlug, formData);
 
         if (errors.length) {
             errors.forEach((err: any) => {
@@ -99,7 +103,15 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
         if (!organization) return;
         // onClose();
 
-        router.push(`/communities/${organization.slug}`)
+        toast({
+            title: `Success`,
+            description: `Community "${organization.name.length > 15 ? organization.name.substring(0, 15) + "..." : organization.name}" created, you will be redirected in few seconds..`,
+            duration: 1500
+        })
+
+        setTimeout(() => {
+            router.push(`/communities/${organization.slug}`)
+        }, 1500)
     }
 
     return (
@@ -182,6 +194,30 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
                                         className={"account-form_input no-focus"}
                                         {...field}
                                     />
+                                </FormControl>
+                                <FormMessage/>
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="variant"
+                        render={({field}) => (
+                            <FormItem className={"flex flex-col w-full gap-3"}>
+                                <FormLabel className={"text-base-semibold text-light-2"}>
+                                    Variant
+                                </FormLabel>
+                                <FormControl>
+                                    <RadioGroup onValueChange={field.onChange} defaultValue="public" className={"flex gap-4"}>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="public" id="r1" />
+                                            <Label htmlFor="r1">Public</Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="private" id="r2" />
+                                            <Label htmlFor="r2">Private</Label>
+                                        </div>
+                                    </RadioGroup>
                                 </FormControl>
                                 <FormMessage/>
                             </FormItem>

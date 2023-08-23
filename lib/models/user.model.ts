@@ -20,6 +20,18 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    subscribes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
+    subscribers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
     communities: [
         {
             type: mongoose.Schema.Types.ObjectId,
