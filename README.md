@@ -33,6 +33,7 @@ Is an application similar to Thread, Twitter. Written in JS (nextjs, react).
 - Ability to create post in community ⏳ 
 - Ability to change visibility community (public, private) ⏳
 - Ability to create post in community like admin ⏳
+- Load threads by interests (ex. by subscribes and followed communities firstly) ⏳
 - Optimize loading images and content ⏳
 - Project review and clenup ⏳
 
