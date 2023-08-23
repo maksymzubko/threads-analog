@@ -10,14 +10,14 @@ import {connectToDB} from "@/lib/mongoose";
 import {clerkClient, Organization} from "@clerk/clerk-sdk-node";
 import axios, {AxiosResponse} from "axios";
 
-export async function newCommunity(userId: string, description: string, name: string, slug: string, form: FormData) {
+export async function newCommunity(userId: string, description: string, variant: string, name: string, slug: string, form: FormData) {
     let errors: any = [];
     let organization = await clerkClient.organizations.createOrganization(
         {
             name,
             slug,
             createdBy: userId,
-            publicMetadata: {description}
+            publicMetadata: {description, variant}
         })
         .then(res => res)
         .catch(err => {
@@ -28,7 +28,7 @@ export async function newCommunity(userId: string, description: string, name: st
             }
         });
 
-    if (organization) {
+    if (organization && form.get('file')) {
         organization = await axios.put(`https://api.clerk.com/v1/organizations/${organization.id}/logo`, form, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -55,6 +55,7 @@ export async function createCommunity(
     slug: string,
     image: string,
     description: string,
+    variant: string,
     createdById: string // Change the parameter name to reflect it's an id
 ) {
     try {
@@ -73,6 +74,7 @@ export async function createCommunity(
             slug,
             image,
             description,
+            variant,
             createdBy: user._id, // Use the mongoose ID of the user
         });
 
@@ -195,7 +197,8 @@ export async function fetchCommunities({
 
 export async function addMemberToCommunity(
     communityId: string,
-    memberId: string
+    memberId: string,
+    role: string
 ) {
     try {
         connectToDB();
@@ -215,12 +218,12 @@ export async function addMemberToCommunity(
         }
 
         // Check if the user is already a member of the community
-        if (community.members.includes(user._id)) {
+        if (community.members.some((u:any)=>u.user.user._id)) {
             throw new Error("User is already a member of the community");
         }
 
         // Add the user's _id to the members array in the community
-        community.members.push(user._id);
+        community.members.push({user: user._id, role});
         await community.save();
 
         // Add the community's _id to the communities array in the user

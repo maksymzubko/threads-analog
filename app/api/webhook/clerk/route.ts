@@ -77,6 +77,8 @@ export const POST = async (request: Request) => {
                 logo_url || image_url,
                 // @ts-ignore
                 public_metadata?.description ?? "",
+                // @ts-ignore
+                public_metadata?.variant ?? "",
                 created_by
             );
 
@@ -117,11 +119,11 @@ export const POST = async (request: Request) => {
         try {
             // Resource: https://clerk.com/docs/reference/backend-api/tag/Organization-Memberships#operation/CreateOrganizationMembership
             // Show what evnt?.data sends from above resource
-            const { organization, public_user_data } = evnt?.data;
+            const { role, organization, public_user_data } = evnt?.data;
             console.log("created", evnt?.data);
 
             // @ts-ignore
-            await addMemberToCommunity(organization.id, public_user_data.user_id);
+            await addMemberToCommunity(organization.id, public_user_data.user_id, role);
 
             return NextResponse.json(
                 { message: "Invitation accepted" },

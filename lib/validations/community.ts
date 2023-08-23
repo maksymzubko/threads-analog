@@ -5,4 +5,5 @@ export const CommunityValidation = zod.object({
     slug: zod.string().min(1),
     description: zod.string().max(100),
     image: zod.string(),
+    variant: zod.string().nonempty(),
 })
