@@ -10,13 +10,14 @@ import * as zod from 'zod';
 import Image from "next/image";
 import {ChangeEvent, useState} from "react";
 import {CommunityValidation} from "@/lib/validations/community";
-import {newCommunity} from "@/lib/actions/community.actions";
+import {manageCommunity, newCommunity} from "@/lib/actions/community.actions";
 import {useRouter} from "next/navigation";
 import {useToast} from "@/components/ui/use-toast";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import {Label} from "@/components/ui/label";
+import {CommunityActionProps} from "@/components/shared/CommunityAction";
 
-const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () => void; userId: string; }) => {
+const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps) => {
     const [files, setFiles] = useState<File[]>([])
     const router = useRouter();
     const {toast} = useToast();
@@ -25,11 +26,11 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
         {
             resolver: zodResolver(CommunityValidation),
             defaultValues: {
-                slug: '',
-                name: '',
-                description: '',
-                image: '',
-                variant: 'public',
+                slug: community ? community.slug : '',
+                name: community ? community.name : '',
+                description: community ? community.description : '',
+                image: community ? community.image : '',
+                variant: community ? community.variant : 'public',
             }
         });
 
@@ -78,7 +79,9 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
     const onCancel = () => {
         form.reset();
         setFiles([]);
-        onClose();
+        if (onClose) {
+            onClose();
+        }
     }
 
     const onSubmit = async (values: zod.infer<typeof CommunityValidation>) => {
@@ -92,7 +95,10 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
         const {
             organization,
             errors
-        } = await newCommunity(userId, values.description, values.variant, values.name, fixedSlug, formData);
+        } = community ?
+            await manageCommunity(community.id, values.description, values.variant, values.name, fixedSlug, formData)
+            :
+            await newCommunity(userId, values.description, values.variant, values.name, fixedSlug, formData);
 
         if (errors.length) {
             errors.forEach((err: any) => {
@@ -101,17 +107,26 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
         }
 
         if (!organization) return;
-        // onClose();
 
-        toast({
-            title: `Success`,
-            description: `Community "${organization.name.length > 15 ? organization.name.substring(0, 15) + "..." : organization.name}" created, you will be redirected in few seconds..`,
-            duration: 1500
-        })
-
-        setTimeout(() => {
-            router.push(`/communities/${organization.slug}`)
-        }, 1500)
+        if(!community)
+        {
+            toast({
+                title: `Success`,
+                description: `Community "${organization.name.length > 15 ? organization.name.substring(0, 15) + "..." : organization.name}" created, you will be redirected in few seconds..`,
+                duration: 1500
+            })
+            setTimeout(() => {
+                router.push(`/communities/${organization.slug}`)
+            }, 1500)
+        }
+        else {
+            toast({
+                title: `Success`,
+                description: `Community updated.`,
+                duration: 1500
+            })
+        }
+        router.push(`/communities/${organization.slug}`)
     }
 
     return (
@@ -208,13 +223,14 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
                                     Variant
                                 </FormLabel>
                                 <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue="public" className={"flex gap-4"}>
+                                    <RadioGroup disabled={!!community} onValueChange={field.onChange} defaultValue="public"
+                                                className={"flex gap-4"}>
                                         <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="public" id="r1" />
+                                            <RadioGroupItem value="public" id="r1"/>
                                             <Label htmlFor="r1">Public</Label>
                                         </div>
                                         <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="private" id="r2" />
+                                            <RadioGroupItem value="private" id="r2"/>
                                             <Label htmlFor="r2">Private</Label>
                                         </div>
                                     </RadioGroup>
@@ -252,7 +268,8 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
                         <Button type="submit"
                                 disabled={!form.formState.isValid || form.formState.isSubmitting || form.formState.isSubmitSuccessful}
                                 className={"bg-primary-500 w-[40%]"}>
-                            {form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Submitting...' : 'Submit'}
+                            {!community && (form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Submitting...' : 'Submit')}
+                            {community && (form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Saving...' : 'Save')}
                         </Button>
                     </div>
                 </form>
@@ -261,4 +278,4 @@ const CreateCommunityForm = ({id, onClose, userId}: { id?: string, onClose: () =
     )
 }
 
-export default CreateCommunityForm;
+export default ManageCommunityForm;
