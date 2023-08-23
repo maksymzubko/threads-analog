@@ -15,6 +15,10 @@ const communitySchema = new mongoose.Schema({
         required: true,
     },
     image: String,
+    variant: {
+        type: String,
+        required: true,
+    },
     registeredAt: {
         type: Date,
         default: Date.now
@@ -30,10 +34,21 @@ const communitySchema = new mongoose.Schema({
             ref: "Thread",
         },
     ],
-    members: [
+    requests: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "User"
+        }
+    ],
+    members: [
+        {
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+            role: {
+                type: String
+            }
         },
     ],
 });

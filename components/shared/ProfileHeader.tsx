@@ -13,6 +13,7 @@ interface Props {
     username: string;
     type?: string;
     registeredAt: string;
+    isAdmin?: boolean;
 }
 
 const ProfileHeader = ({
@@ -24,6 +25,7 @@ const ProfileHeader = ({
                            bio,
                             type,
                             registeredAt,
+                            isAdmin,
                        }: Props) => {
     return (
         <div className='flex w-full flex-col justify-start'>
@@ -65,7 +67,7 @@ const ProfileHeader = ({
             <div className="flex items-center pt-2">
                 <CalendarIcon className="mr-2 h-4 w-4 opacity-70"/>{" "}
                 <span className="text-xs text-muted-foreground text-gray-1 text-small-medium">
-                Joined {formatDateStringByOptions({year: 'numeric', month: 'long'}, registeredAt)}
+                {type === 'Community' ? 'Created' : 'Joined'} {formatDateStringByOptions({year: 'numeric', month: 'long'}, registeredAt)}
               </span>
             </div>
             <div className='mt-5 h-0.5 w-full bg-dark-3' />

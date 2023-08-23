@@ -8,6 +8,7 @@ import {ThemeProvider} from "@/components/theme-provider";
 import LeftSidebar from "@/components/shared/LeftSidebar";
 import {Suspense} from "react";
 import LeftSidebarSkeleton from "@/components/skeletons/LeftSidebarSkeleton";
+import {Toaster} from "@/components/ui/toaster";
 
 const inter = Inter({subsets: ['latin']})
 
@@ -37,6 +38,7 @@ export default function RootLayout({children}: {
             <RightSidebar/>
         </main>
         <BottomBar/>
+        <Toaster />
         </body>
         </html>
     </ClerkProvider>
