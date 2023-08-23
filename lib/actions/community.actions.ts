@@ -10,8 +10,35 @@ import {connectToDB} from "@/lib/mongoose";
 import {clerkClient, Organization} from "@clerk/clerk-sdk-node";
 import axios, {AxiosResponse} from "axios";
 
+const instance = axios.create({
+    headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`
+    }
+})
+
+interface ClerkError {
+    name: string,
+    message: string
+}
+
+function handleErrors(err: any, isAxios = false) {
+    let _errList: ClerkError[] = [];
+    if (err?.errors && !isAxios) {
+        err.errors.forEach((msg: any) => {
+            _errList.push({name: msg.meta.paramName, message: msg.longMessage})
+        })
+    } else if (err?.response?.data?.errors && isAxios) {
+        err.response.data.errors.forEach((msg: any) => {
+            _errList.push({name: msg?.meta?.paramName, message: msg.longMessage})
+        })
+    }
+    return _errList;
+}
+
 export async function newCommunity(userId: string, description: string, variant: string, name: string, slug: string, form: FormData) {
     let errors: any = [];
+
     let organization = await clerkClient.organizations.createOrganization(
         {
             name,
@@ -21,29 +48,48 @@ export async function newCommunity(userId: string, description: string, variant:
         })
         .then(res => res)
         .catch(err => {
-            if (err?.errors) {
-                err.errors.forEach((msg: any) => {
-                    errors.push({name: msg.meta.paramName, message: msg.longMessage})
-                })
-            }
+            errors.push(...handleErrors(err))
         });
 
     if (organization && form.get('file')) {
-        organization = await axios.put(`https://api.clerk.com/v1/organizations/${organization.id}/logo`, form, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`
-            }
-        })
-            .then((res: AxiosResponse<Organization, any>) => res.data)
-            .catch(err => {
-                if (err?.response?.data?.errors) {
-                    err.response.data.errors.forEach((msg: any) => {
-                        errors.push({name: msg?.meta?.paramName, message: msg.longMessage})
-                    })
-                }
-            })
+        let result = await updateCommunityLogo(organization.id, form);
+        organization = result.organization;
+        errors.push(...result.errors);
+    }
 
+    return {organization, errors};
+}
+
+async function updateCommunityLogo(orgId: string, form: FormData) {
+    let errors: any = [];
+    const organization = await instance.put(`https://api.clerk.com/v1/organizations/${orgId}/logo`, form)
+        .then((res: AxiosResponse<Organization, any>) => res.data)
+        .catch(err => {
+            errors.push(...handleErrors(err, true))
+        })
+    return {organization, errors};
+}
+
+export async function manageCommunity(orgId: string, description: string, variant: string, name: string, slug: string, form: FormData) {
+    let errors: any = [];
+
+    console.log(slug)
+    let organization = await clerkClient.organizations.updateOrganization(
+        orgId,
+        {
+            name,
+            slug,
+            publicMetadata: {description, variant}
+        })
+        .then(res => res)
+        .catch(err => {
+            errors.push(...handleErrors(err))
+        });
+
+    if (organization && form.get('file')) {
+        let result = await updateCommunityLogo(orgId, form);
+        organization = result.organization;
+        errors.push(...result.errors);
     }
 
     return {organization, errors};
@@ -89,10 +135,10 @@ export async function createCommunity(
 export async function fetchCommunityDetails(id: string) {
     try {
         connectToDB();
-        const communityDetails = await Community.findOne({slug:id}).populate([
+        const communityDetails = await Community.findOne({slug: id}).populate([
             "createdBy",
             {
-                path: "members",
+                path: "members.user",
                 model: User,
                 select: "name username image _id id",
             },
@@ -218,7 +264,7 @@ export async function addMemberToCommunity(
         }
 
         // Check if the user is already a member of the community
-        if (community.members.some((u:any)=>u.user.user._id)) {
+        if (community.members.some((u: any) => u.user.user._id)) {
             throw new Error("User is already a member of the community");
         }
 
@@ -282,8 +328,10 @@ export async function removeUserFromCommunity(
 export async function updateCommunityInfo(
     communityId: string,
     name: string,
-    username: string,
-    image: string
+    slug: string,
+    image: string,
+    description: string,
+    variant: string
 ) {
     try {
         connectToDB();
@@ -291,7 +339,7 @@ export async function updateCommunityInfo(
         // Find the community by its _id and update the information
         const updatedCommunity = await Community.findOneAndUpdate(
             {id: communityId},
-            {name, username, image}
+            {name, slug, image, description, variant}
         );
 
         if (!updatedCommunity) {

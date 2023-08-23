@@ -166,11 +166,11 @@ export const POST = async (request: Request) => {
         try {
             // Resource: https://clerk.com/docs/reference/backend-api/tag/Organizations#operation/UpdateOrganization
             // Show what evnt?.data sends from above resource
-            const { id, logo_url, name, slug } = evnt?.data;
+            const { id, logo_url, name, slug, public_metadata } = evnt?.data;
             console.log("updated", evnt?.data);
 
             // @ts-ignore
-            await updateCommunityInfo(id, name, slug, logo_url);
+            await updateCommunityInfo(id, name, slug, logo_url, public_metadata.description ?? "", public_metadata.variant ?? "public");
 
             return NextResponse.json({ message: "Member removed" }, { status: 201 });
         } catch (err) {
