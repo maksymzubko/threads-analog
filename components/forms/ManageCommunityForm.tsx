@@ -1,174 +1,223 @@
-"use client";
+'use client'
 
-import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
-import {Textarea} from "@/components/ui/textarea";
-import * as zod from 'zod';
-import Image from "next/image";
-import {ChangeEvent, useState} from "react";
-import {CommunityValidation} from "@/lib/validations/community";
-import {manageCommunity, newCommunity} from "@/lib/actions/community.actions";
-import {useRouter} from "next/navigation";
-import {useToast} from "@/components/ui/use-toast";
-import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
-import {Label} from "@/components/ui/label";
-import {CommunityActionProps} from "@/components/shared/CommunityAction";
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
+import {useForm} from 'react-hook-form'
+import {zodResolver} from '@hookform/resolvers/zod'
+import {Input} from '@/components/ui/input'
+import {Button} from '@/components/ui/button'
+import {Textarea} from '@/components/ui/textarea'
+import * as zod from 'zod'
+import Image from 'next/image'
+import {ChangeEvent, useState} from 'react'
+import {CommunityValidation} from '@/lib/validations/community'
+import {manageCommunity, newCommunity} from '@/lib/actions/community.actions'
+import {usePathname, useRouter} from 'next/navigation'
+import {useToast} from '@/components/ui/use-toast'
+import {RadioGroup, RadioGroupItem} from '@/components/ui/radio-group'
+import {Label} from '@/components/ui/label'
+import {CommunityActionProps} from '@/components/shared/CommunityAction'
 
-const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps) => {
+const ManageCommunityForm = ({
+                                 community,
+                                 onClose,
+                                 userId,
+                             }: CommunityActionProps) => {
     const [files, setFiles] = useState<File[]>([])
-    const router = useRouter();
-    const {toast} = useToast();
+    const router = useRouter()
+    const {toast} = useToast()
+    const path = usePathname()
 
-    const form = useForm(
-        {
-            resolver: zodResolver(CommunityValidation),
-            defaultValues: {
-                slug: community ? community.slug : '',
-                name: community ? community.name : '',
-                description: community ? community.description : '',
-                image: community ? community.image : '',
-                variant: community ? community.variant : 'public',
-            }
-        });
+    const form = useForm({
+        resolver: zodResolver(CommunityValidation),
+        defaultValues: {
+            slug: community ? community.slug : '',
+            name: community ? community.name : '',
+            description: community ? community.description : '',
+            image: community ? community.image : '',
+            variant: community ? community.variant : 'public',
+        },
+    })
 
-    const handleImage = (e: ChangeEvent<HTMLInputElement>, fieldChange: (value: string) => void) => {
-        e.preventDefault();
+    const handleImage = (
+        e: ChangeEvent<HTMLInputElement>,
+        fieldChange: (value: string) => void
+    ) => {
+        e.preventDefault()
 
         if (e.target.files && e.target.files.length) {
-            const fileReaderString = new FileReader();
+            const fileReaderString = new FileReader()
 
-            const file = e.target.files[0];
-            setFiles([e.target.files[0]]);
+            const file = e.target.files[0]
+            setFiles([e.target.files[0]])
 
-            if (!file.type.includes('image')) return;
+            if (!file.type.includes('image')) return
 
             fileReaderString.onload = async (event) => {
-                const imageDataUrl = event.target?.result?.toString() || "";
+                const imageDataUrl = event.target?.result?.toString() || ''
 
-                fieldChange(imageDataUrl);
+                fieldChange(imageDataUrl)
             }
 
-            fileReaderString.readAsDataURL(file);
+            fileReaderString.readAsDataURL(file)
         }
     }
 
     function convertToPattern(inputString: string, isSlug: boolean = false) {
-        const pattern = /[^a-z0-9\s-]/g;
-        const cleanedString = inputString
-            .replace(pattern, '')
-            .replace(/\s+/g, '-');
+        const pattern = /[^a-z0-9\s-]/g
+        const cleanedString = inputString.replace(pattern, '').replace(/\s+/g, '-')
 
         if (isSlug) {
-            const noConsecutiveHyphens = cleanedString
-                .replace(/-{2,}/g, '-');
-            return noConsecutiveHyphens
-                .replace(/-$/g, '-');
+            const noConsecutiveHyphens = cleanedString.replace(/-{2,}/g, '-')
+            return noConsecutiveHyphens.replace(/-$/g, '-')
         }
-        return cleanedString
-            .replace(/-$/g, '');
+        return cleanedString.replace(/-$/g, '')
     }
 
     const onChange = (event: any) => {
         if (event.target.name === 'name' || event.target.name === 'slug')
-            form.setValue('slug', convertToPattern(event.target.value.toLowerCase(), event.target.name === 'slug'));
+            form.setValue(
+                'slug',
+                convertToPattern(
+                    event.target.value.toLowerCase(),
+                    event.target.name === 'slug'
+                )
+            )
     }
 
     const onCancel = () => {
-        form.reset();
-        setFiles([]);
+        form.reset()
+        setFiles([])
         if (onClose) {
-            onClose();
+            onClose()
         }
     }
 
     const onSubmit = async (values: zod.infer<typeof CommunityValidation>) => {
-        const fixedSlug = convertToPattern(form.getValues().slug);
+        const fixedSlug = convertToPattern(form.getValues().slug)
         form.setValue('slug', fixedSlug)
 
-        const formData = new FormData();
-        formData.set('uploader_user_id', userId);
-        if (files[0]) formData.set('file', files[0], "file");
+        const formData = new FormData()
+        formData.set('uploader_user_id', userId)
+        if (files[0]) formData.set('file', files[0], 'file')
 
-        const {
-            organization,
-            errors
-        } = community ?
-            await manageCommunity(community.id, values.description, values.variant, values.name, fixedSlug, formData)
-            :
-            await newCommunity(userId, values.description, values.variant, values.name, fixedSlug, formData);
+        const {organization, errors} = community
+            ? await manageCommunity(
+                community.id,
+                values.description,
+                values.variant,
+                values.name,
+                fixedSlug,
+                formData
+            )
+            : await newCommunity(
+                userId,
+                values.description,
+                values.variant,
+                values.name,
+                fixedSlug,
+                formData
+            )
 
         if (errors.length) {
             errors.forEach((err: any) => {
-                form.setError(err.name, {message: err.message});
+                form.setError(err.name, {message: err.message})
             })
         }
 
-        if (!organization) return;
+        if (!organization) return
 
-        if(!community)
-        {
+        if (!community) {
             toast({
                 title: `Success`,
-                description: `Community "${organization.name.length > 15 ? organization.name.substring(0, 15) + "..." : organization.name}" created, you will be redirected in few seconds..`,
-                duration: 1500
+                description: `Community "${
+                    organization.name.length > 15
+                        ? organization.name.substring(0, 15) + '...'
+                        : organization.name
+                }" created, you will be redirected in few seconds..`,
+                duration: 1500,
             })
             setTimeout(() => {
                 router.push(`/communities/${organization.slug}`)
             }, 1500)
-        }
-        else {
+        } else {
             toast({
                 title: `Success`,
-                description: `Community updated.`,
-                duration: 1500
+                description: `Community updated. You will be redirected in few seconds..`,
+                duration: 1500,
             })
+            setTimeout(() => {
+                if (path.split('/').at(-1) === organization.slug)
+                    window.location.href = window.location.href.toString()
+                else
+                    router.push(`/communities/${organization.slug}`)
+            }, 1500)
         }
-        router.push(`/communities/${organization.slug}`)
     }
 
     return (
-        <section className={"p-8 w-[90%] md:w-[600px] bg-dark-3 rounded-2xl max-h-[100%] overflow-auto"}>
+        <section
+            className={
+                'p-8 w-[90%] md:w-[600px] bg-dark-3 rounded-2xl max-h-[100%] overflow-auto'
+            }
+        >
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} onChange={onChange} autoComplete={"off"}
-                      className="flex flex-col justify-start gap-10">
+                <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    onChange={onChange}
+                    autoComplete={'off'}
+                    className="flex flex-col justify-start gap-10"
+                >
                     <FormField
                         control={form.control}
                         name="image"
                         render={({field}) => (
-                            <FormItem className={"flex items-center gap-4"}>
+                            <FormItem className={'flex items-center gap-4'}>
                                 <FormLabel
-                                    className={"account-form_image-label relative hover:bg-dark-3 hover: cursor-pointer group"}>
-                                    {field?.value ?
+                                    className={
+                                        'account-form_image-label relative hover:bg-dark-3 hover: cursor-pointer group'
+                                    }
+                                >
+                                    {field?.value ? (
                                         <Image
                                             src={field.value}
-                                            alt={"profile_photo"}
+                                            alt={'profile_photo'}
                                             fill
                                             priority
-                                            className={"rounded-full object-cover"}
+                                            className={'rounded-full object-cover'}
                                         />
-                                        :
+                                    ) : (
                                         <Image
-                                            src={"/assets/profile.svg"}
-                                            alt={"profile_photo"}
+                                            src={'/assets/profile.svg'}
+                                            alt={'profile_photo'}
                                             width={24}
                                             height={24}
-                                            className={"object-contain"}
+                                            className={'object-contain'}
                                         />
-                                    }
+                                    )}
                                     <div
-                                        className={"group-hover:bg-[#00000080] rounded-full transition ease-in-out h-full w-full absolute"}
-                                        onClick={() => form.setFocus('image')}/>
+                                        className={
+                                            'group-hover:bg-[#00000080] rounded-full transition ease-in-out h-full w-full absolute'
+                                        }
+                                        onClick={() => form.setFocus('image')}
+                                    />
                                 </FormLabel>
-                                <FormControl className={"flex-1 text-base-semibold text-gray-200"}>
+                                <FormControl
+                                    className={'flex-1 text-base-semibold text-gray-200'}
+                                >
                                     <Input
-                                        type={"file"}
-                                        accept={"image/*"}
-                                        placeholder={"Upload a photo"}
-                                        className={"account-form_image-input hidden h-auto"}
-                                        onChange={e => handleImage(e, field.onChange)}
+                                        type={'file'}
+                                        accept={'image/*'}
+                                        placeholder={'Upload a photo'}
+                                        className={'account-form_image-input hidden h-auto'}
+                                        onChange={(e) => handleImage(e, field.onChange)}
                                     />
                                 </FormControl>
                             </FormItem>
@@ -178,15 +227,15 @@ const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps)
                         control={form.control}
                         name="name"
                         render={({field}) => (
-                            <FormItem className={"flex flex-col w-full gap-3"}>
-                                <FormLabel className={"text-base-semibold text-light-2"}>
+                            <FormItem className={'flex flex-col w-full gap-3'}>
+                                <FormLabel className={'text-base-semibold text-light-2'}>
                                     Name
                                 </FormLabel>
                                 <FormControl>
                                     <Input
-                                        type={"text"}
-                                        placeholder={"This is your public display name."}
-                                        className={"account-form_input no-focus"}
+                                        type={'text'}
+                                        placeholder={'This is your public display name.'}
+                                        className={'account-form_input no-focus'}
                                         {...field}
                                     />
                                 </FormControl>
@@ -198,15 +247,15 @@ const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps)
                         control={form.control}
                         name="slug"
                         render={({field}) => (
-                            <FormItem className={"flex flex-col w-full gap-3"}>
-                                <FormLabel className={"text-base-semibold text-light-2"}>
+                            <FormItem className={'flex flex-col w-full gap-3'}>
+                                <FormLabel className={'text-base-semibold text-light-2'}>
                                     Slug
                                 </FormLabel>
                                 <FormControl>
                                     <Input
-                                        type={"text"}
-                                        placeholder={"This is your slug."}
-                                        className={"account-form_input no-focus"}
+                                        type={'text'}
+                                        placeholder={'This is your slug.'}
+                                        className={'account-form_input no-focus'}
                                         {...field}
                                     />
                                 </FormControl>
@@ -218,13 +267,16 @@ const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps)
                         control={form.control}
                         name="variant"
                         render={({field}) => (
-                            <FormItem className={"flex flex-col w-full gap-3"}>
-                                <FormLabel className={"text-base-semibold text-light-2"}>
+                            <FormItem className={'flex flex-col w-full gap-3'}>
+                                <FormLabel className={'text-base-semibold text-light-2'}>
                                     Variant
                                 </FormLabel>
                                 <FormControl>
-                                    <RadioGroup disabled={!!community} onValueChange={field.onChange} defaultValue="public"
-                                                className={"flex gap-4"}>
+                                    <RadioGroup
+                                        onValueChange={field.onChange}
+                                        defaultValue={form.getValues().variant}
+                                        className={'flex gap-4'}
+                                    >
                                         <div className="flex items-center space-x-2">
                                             <RadioGroupItem value="public" id="r1"/>
                                             <Label htmlFor="r1">Public</Label>
@@ -243,14 +295,16 @@ const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps)
                         control={form.control}
                         name="description"
                         render={({field}) => (
-                            <FormItem className={"flex flex-col w-full gap-3"}>
-                                <FormLabel className={"text-base-semibold text-light-2"}>
+                            <FormItem className={'flex flex-col w-full gap-3'}>
+                                <FormLabel className={'text-base-semibold text-light-2'}>
                                     Description
                                 </FormLabel>
                                 <FormControl>
                                     <Textarea
-                                        placeholder={"This is community description"}
-                                        className={"account-form_input no-focus max-h-[300px] resize-none md:min-h-[200px] min-h-[100px]"}
+                                        placeholder={'This is community description'}
+                                        className={
+                                            'account-form_input no-focus max-h-[300px] resize-none md:min-h-[200px] min-h-[100px]'
+                                        }
                                         {...field}
                                     />
                                 </FormControl>
@@ -258,18 +312,34 @@ const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps)
                             </FormItem>
                         )}
                     />
-                    <div className={"flex items-center justify-evenly gap-4"}>
-                        <Button type={"button"}
-                                disabled={form.formState.isSubmitting}
-                                className={"bg-primary-500 w-[40%]"}
-                                onClick={onCancel}>
+                    <div className={'flex items-center justify-evenly gap-4'}>
+                        <Button
+                            type={'button'}
+                            disabled={form.formState.isSubmitting}
+                            className={'bg-primary-500 w-[40%]'}
+                            onClick={onCancel}
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit"
-                                disabled={!form.formState.isValid || form.formState.isSubmitting || form.formState.isSubmitSuccessful}
-                                className={"bg-primary-500 w-[40%]"}>
-                            {!community && (form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Submitting...' : 'Submit')}
-                            {community && (form.formState.isSubmitting || form.formState.isSubmitSuccessful ? 'Saving...' : 'Save')}
+                        <Button
+                            type="submit"
+                            disabled={
+                                !form.formState.isValid ||
+                                form.formState.isSubmitting ||
+                                form.formState.isSubmitSuccessful
+                            }
+                            className={'bg-primary-500 w-[40%]'}
+                        >
+                            {!community &&
+                                (form.formState.isSubmitting ||
+                                form.formState.isSubmitSuccessful
+                                    ? 'Submitting...'
+                                    : 'Submit')}
+                            {community &&
+                                (form.formState.isSubmitting ||
+                                form.formState.isSubmitSuccessful
+                                    ? 'Saving...'
+                                    : 'Save')}
                         </Button>
                     </div>
                 </form>
@@ -278,4 +348,4 @@ const ManageCommunityForm = ({community, onClose, userId}: CommunityActionProps)
     )
 }
 
-export default ManageCommunityForm;
+export default ManageCommunityForm
