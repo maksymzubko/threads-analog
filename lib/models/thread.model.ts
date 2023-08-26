@@ -1,56 +1,56 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const threadSchema = new mongoose.Schema({
-    text: {type: String, required: true},
-    author: {
+  text: { type: String, required: true },
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  community: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Community',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  parentId: {
+    type: String,
+  },
+  likes: [
+    {
+      user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
-    },
-    community: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Community'
-    },
-    createdAt: {
+      },
+      createdAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+      },
     },
-    parentId: {
-        type: String
+  ],
+  mentioned: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
     },
-    likes: [
-        {
-            user: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'User'
-            },
-            createdAt: {
-                type: Date,
-                default: Date.now
-            }
-        }
-    ],
-    mentioned: [
-        {
-            user: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'User'
-            }
-        }
-    ],
-    children: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Thread'
-        }
-    ],
-    images: [
-        {
-            type: String
-        }
-    ]
+  ],
+  children: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Thread',
+    },
+  ],
+  images: [
+    {
+      type: String,
+    },
+  ],
 })
 
-const Thread =  mongoose.models.Thread || mongoose.model('Thread', threadSchema);
+const Thread = mongoose.models.Thread || mongoose.model('Thread', threadSchema)
 
-export default Thread;
+export default Thread

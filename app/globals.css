@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-.rws-close{
+.rws-close {
   color: #0e0e12;
 }
 
@@ -126,8 +126,8 @@
 }
 
 .cl-organizationSwitcherTrigger
-.cl-organizationPreview
-.cl-organizationPreviewTextContainer {
+  .cl-organizationPreview
+  .cl-organizationPreviewTextContainer {
   @apply max-sm:hidden;
 }
 
